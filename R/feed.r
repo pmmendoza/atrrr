@@ -770,15 +770,26 @@ post <- function(text,
     )
   }
 
+  normalize_external_embed_uri <- function(embed, fallback_uri) {
+    embed_uri <- purrr::pluck(embed, "external", "uri", .default = "")
+    parsed <- tryCatch(
+      httr2::url_parse(embed_uri),
+      error = function(...) NULL
+    )
+    scheme <- tolower(parsed$scheme %||% "")
+    host <- parsed$hostname %||% ""
+    uri_valid <- !is.null(parsed) && scheme %in% c("http", "https") && host != ""
+    if (!uri_valid) {
+      purrr::pluck(embed, "external", "uri") <- fallback_uri
+    }
+    embed
+  }
+
   # link is only added when no image or video exist, but takes precedence over
   # links in text
   if (!is.null(link) && !purrr::pluck_exists(record, "embed") && preview_card) {
     record$embed <- fetch_preview(link)
-    # record$embed$uri can't be empty, but the preview endpoint returns empty
-    # uris sometimes. Fixing it here
-    if (purrr::pluck(record, "embed", "external", "uri") == "") {
-      purrr::pluck(record, "embed", "external", "uri") <- link
-    }
+    record$embed <- normalize_external_embed_uri(record$embed, link)
   }
 
   # https://atproto.com/blog/create-post#mentions-and-links
@@ -794,6 +805,7 @@ post <- function(text,
       if (length(uri) > 0L) {
         # preview card
         record$embed <- fetch_preview(uri)
+        record$embed <- normalize_external_embed_uri(record$embed, uri)
       }
     }
   }

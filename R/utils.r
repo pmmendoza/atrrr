@@ -262,29 +262,129 @@ str_locate_all_bytes <- function(string, pattern) {
 
 
 fetch_preview <- function(uri) {
-  # this is the API bsky.app is using. Not sure how robust it is
-  resp <- httr2::request("https://cardyb.bsky.app/v1/extract") |>
-    httr2::req_url_query(url = uri) |>
-    httr2::req_error(is_error = function(resp) FALSE) |>
-    httr2::req_perform()
-
-  if (httr2::resp_status(resp) < 400L) {
-    preview <- resp |>
-      httr2::resp_body_json()
-    embed <- list(`$type` = "app.bsky.embed.external",
-                  external = list(uri = preview$url,
-                                  title = preview$title,
-                                  description = preview$description))
-    if (purrr::pluck_exists(preview, "image")) {
-      embed$external$thumb <-
-        com_atproto_repo_upload_blob2(purrr::pluck(preview, "image"))$blob
-    }
-  } else {
-    embed <- list(`$type` = "app.bsky.embed.external",
-                  external = list(uri = uri,
-                                  title = "",
-                                  description = ""))
+  clean_text <- function(x) {
+    if (is.null(x) || length(x) == 0 || isTRUE(is.na(x))) return("")
+    stringr::str_squish(as.character(x))
   }
+
+  first_non_empty <- function(...) {
+    vals <- list(...)
+    for (v in vals) {
+      val <- clean_text(v)
+      if (val != "") return(val)
+    }
+    ""
+  }
+
+  is_valid_http_uri <- function(x) {
+    x <- clean_text(x)
+    if (x == "") return(FALSE)
+    parsed <- tryCatch(httr2::url_parse(x), error = function(...) NULL)
+    if (is.null(parsed)) return(FALSE)
+    scheme <- tolower(parsed$scheme %||% "")
+    host <- parsed$hostname %||% ""
+    scheme %in% c("http", "https") && host != ""
+  }
+
+  extract_meta_content <- function(html, attr, key) {
+    pattern_a <- glue::glue(
+      "(?is)<meta[^>]+{attr}=[\"']{key}[\"'][^>]+content=[\"']([^\"']*)[\"'][^>]*>"
+    )
+    pattern_b <- glue::glue(
+      "(?is)<meta[^>]+content=[\"']([^\"']*)[\"'][^>]+{attr}=[\"']{key}[\"'][^>]*>"
+    )
+    first_non_empty(
+      stringr::str_match(html, pattern_a)[, 2],
+      stringr::str_match(html, pattern_b)[, 2]
+    )
+  }
+
+  extract_source_meta <- function(url) {
+    resp <- tryCatch(
+      httr2::request(url) |>
+        httr2::req_timeout(15) |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
+        httr2::req_perform(),
+      error = function(...) NULL
+    )
+    if (is.null(resp) || httr2::resp_status(resp) >= 400L) {
+      return(list(title = "", description = "", image = ""))
+    }
+
+    html <- tryCatch(
+      httr2::resp_body_string(resp),
+      error = function(...) ""
+    )
+    if (clean_text(html) == "") {
+      return(list(title = "", description = "", image = ""))
+    }
+
+    list(
+      title = first_non_empty(
+        extract_meta_content(html, "property", "og:title"),
+        extract_meta_content(html, "name", "twitter:title"),
+        stringr::str_match(html, "(?is)<title[^>]*>(.*?)</title>")[, 2]
+      ),
+      description = first_non_empty(
+        extract_meta_content(html, "property", "og:description"),
+        extract_meta_content(html, "name", "twitter:description"),
+        extract_meta_content(html, "name", "description")
+      ),
+      image = first_non_empty(
+        extract_meta_content(html, "property", "og:image"),
+        extract_meta_content(html, "name", "twitter:image")
+      )
+    )
+  }
+
+  preview <- list()
+  for (attempt in 1:3) {
+    resp <- tryCatch(
+      httr2::request("https://cardyb.bsky.app/v1/extract") |>
+        httr2::req_url_query(url = uri) |>
+        httr2::req_timeout(15) |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
+        httr2::req_perform(),
+      error = function(...) NULL
+    )
+
+    if (!is.null(resp) && httr2::resp_status(resp) < 400L) {
+      preview <- tryCatch(
+        httr2::resp_body_json(resp, check_type = FALSE),
+        error = function(...) list()
+      )
+      break
+    }
+    if (attempt < 3) Sys.sleep(2 ^ (attempt - 1))
+  }
+
+  source_meta <- list(title = "", description = "", image = "")
+  preview_title <- clean_text(preview$title)
+  preview_description <- clean_text(preview$description)
+  if (preview_title == "" || preview_description == "") {
+    source_meta <- extract_source_meta(uri)
+  }
+
+  embed <- list(
+    `$type` = "app.bsky.embed.external",
+    external = list(
+      uri = if (is_valid_http_uri(preview$url)) clean_text(preview$url) else uri,
+      title = first_non_empty(preview_title, source_meta$title),
+      description = first_non_empty(preview_description, source_meta$description)
+    )
+  )
+
+  image_url <- first_non_empty(preview$image, source_meta$image)
+  if (image_url != "") {
+    thumb <- tryCatch(
+      com_atproto_repo_upload_blob2(image_url)$blob,
+      error = function(...) NULL
+    )
+    if (!is.null(thumb)) {
+      embed$external$thumb <- thumb
+    }
+  }
+
   return(embed)
 }
 
