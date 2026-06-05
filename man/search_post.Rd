@@ -98,13 +98,17 @@ Search Posts
 \details{
 The \href{https://docs.bsky.app/docs/api/app-bsky-feed-search-posts}{API docs} claim that
 Lucene query syntax is supported (Boolean operators and brackets for
-complex queries). But only a small subset is \href{https://github.com/bluesky-social/indigo/tree/main/cmd/palomar}{actually implemented}:
+complex queries). But only a small subset is actually
+implemented:
 \itemize{
 \item Whitespace is treated as implicit AND, so all words in a query must occur,
 but the word order and proximity are ignored.
 \item Double quotes indicate exact phrases.
 \item \verb{from:<handle>} will filter to results from that account.
-\item \code{-} excludes terms (does not seem to be working at the moment).
+\item \code{-} excludes terms.
+\item \code{OR} and parentheses for grouping (e.g. \verb{(rstats OR rstat) bluesky}) are
+\strong{not} supported and are treated literally (i.e. will only find posts
+with parentheses and the word OR in it).
 }
 
 Note that matches can occur anywhere in the skeet, not just the text. For
