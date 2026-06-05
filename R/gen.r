@@ -1,6 +1,8 @@
-build_function <- function(lexicon,
-                           gpt_documentation = FALSE,
-                           out_file = "R/auto_generated.r") {
+build_function <- function(
+  lexicon,
+  gpt_documentation = FALSE,
+  out_file = "R/auto_generated.r"
+) {
   if (is.character(lexicon)) {
     lexicon <- read_lexicon(lexicon)
   }
@@ -10,16 +12,23 @@ build_function <- function(lexicon,
 
   lexicon_main <- purrr::pluck(lexicon, "defs", "main", .default = "")
   lexicon_type <- purrr::pluck(lexicon_main, "type", .default = "")
-  lexicon_description <- purrr::pluck(lexicon_main, "description", .default = "")
-
-
+  lexicon_description <- purrr::pluck(
+    lexicon_main,
+    "description",
+    .default = ""
+  )
 
   if (lexicon_type == "query") {
     req_method <- "GET"
     lexicon_params <- purrr::pluck(lexicon_main, "parameters", .default = NULL)
   } else if (lexicon_type == "procedure") {
     req_method <- "POST"
-    lexicon_params <- purrr::pluck(lexicon_main, "input", "schema", .default = NULL)
+    lexicon_params <- purrr::pluck(
+      lexicon_main,
+      "input",
+      "schema",
+      .default = NULL
+    )
   } else {
     warning(glue::glue("Endpoint {endpoint} neither procedure nor query"))
     return(NULL)

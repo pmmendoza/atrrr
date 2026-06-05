@@ -1,12 +1,21 @@
 # chat functions require the URL of the service endpoint rather than "bsky.social"
 # TODO: find way to not have separate make_request_chat and make_request
-chat_bsky_convo_list_convos2 <- function(limit = NULL, cursor = NULL, readState = NULL, status = NULL, .token = NULL, .return = c("json", "resp")) {
+chat_bsky_convo_list_convos2 <- function(
+  limit = NULL,
+  cursor = NULL,
+  readState = NULL,
+  status = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
   make_request(
     name = "/xrpc/chat.bsky.convo.listConvos",
     params = as.list(match.call())[-1] |>
-      purrr::imap(~ {
-        eval(.x, envir = parent.frame())
-      }),
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
     req_method = "GET",
     chat = TRUE
   )
@@ -29,7 +38,14 @@ chat_bsky_convo_list_convos2 <- function(limit = NULL, cursor = NULL, readState 
 #' \dontrun{
 #' list_chats(readState = "read")
 #' }
-list_chats <- function(limit = NULL, cursor = NULL, unread = FALSE, status = NULL, parse = TRUE, .token = NULL) {
+list_chats <- function(
+  limit = NULL,
+  cursor = NULL,
+  unread = FALSE,
+  status = NULL,
+  parse = TRUE,
+  .token = NULL
+) {
   if (!is.logical(unread)) {
     cli::cli_abort("`unread` must be logical ({.code TRUE}/{.code FALSE})")
   }
@@ -42,7 +58,8 @@ list_chats <- function(limit = NULL, cursor = NULL, unread = FALSE, status = NUL
       status = status,
       .token = .token,
       .return = "json"
-    ))
+    )
+  )
 
   if (!parse) {
     return(resp)
@@ -54,13 +71,19 @@ list_chats <- function(limit = NULL, cursor = NULL, unread = FALSE, status = NUL
 }
 
 
-chat_bsky_convo_get_convo_for_members2 <- function(members, .token = NULL, .return = c("json", "resp")) {
+chat_bsky_convo_get_convo_for_members2 <- function(
+  members,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
   make_request(
     name = "/xrpc/chat.bsky.convo.getConvoForMembers",
     params = as.list(match.call())[-1] |>
-      purrr::imap(~ {
-        eval(.x, envir = parent.frame())
-      }),
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
     req_method = "GET",
     chat = TRUE
   )
@@ -71,8 +94,10 @@ chat_bsky_convo_get_convo_for_members2 <- function(members, .token = NULL, .retu
 get_user_chat <- function(actor, parse = TRUE, .token = NULL) {
   if (length(actor) != 1L) {
     cli::cli_abort(
-      c("You can only get chats with 1 actor at a time. Use ",
-        "{.help list_chats} if you want to look for multiple chats.")
+      c(
+        "You can only get chats with 1 actor at a time. Use ",
+        "{.help list_chats} if you want to look for multiple chats."
+      )
     )
   }
   if (!is_did(actor)) {
@@ -85,7 +110,8 @@ get_user_chat <- function(actor, parse = TRUE, .token = NULL) {
       members = actor,
       .token = .token,
       .return = "json"
-    ))
+    )
+  )
   if (!parse) {
     return(resp)
   }
@@ -95,13 +121,19 @@ get_user_chat <- function(actor, parse = TRUE, .token = NULL) {
 }
 
 
-chat_bsky_convo_get_convo_availability2 <- function(members, .token = NULL, .return = c("json", "resp")) {
+chat_bsky_convo_get_convo_availability2 <- function(
+  members,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
   make_request(
     name = "/xrpc/chat.bsky.convo.getConvoAvailability",
     params = as.list(match.call())[-1] |>
-      purrr::imap(~ {
-        eval(.x, envir = parent.frame())
-      }),
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
     req_method = "GET",
     chat = TRUE
   )
@@ -120,7 +152,8 @@ check_user_chat_available <- function(actor, parse = TRUE, .token = NULL) {
       members = actor,
       .token = .token,
       .return = "json"
-    ))
+    )
+  )
 
   if (!parse) {
     return(resp)
@@ -131,13 +164,20 @@ check_user_chat_available <- function(actor, parse = TRUE, .token = NULL) {
 }
 
 
-chat_bsky_convo_send_message2 <- function(convoId, message, .token = NULL, .return = c("json", "resp")) {
+chat_bsky_convo_send_message2 <- function(
+  convoId,
+  message,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
   make_request(
     name = "/xrpc/chat.bsky.convo.sendMessage",
     params = as.list(match.call())[-1] |>
-      purrr::imap(~ {
-        eval(.x, envir = parent.frame())
-      }),
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
     req_method = "POST",
     chat = TRUE
   )
@@ -155,8 +195,9 @@ send_chat_message <- function(chat_id, text, .token = NULL) {
   }
   types <- purrr::map_chr(parsed_richtext, list("features", 1L, "$type"))
   if ("app.bsky.richtext.facet#link" %in% types) {
-    uri <- purrr::map_chr(parsed_richtext, function(f)
-      purrr::pluck(f, "features", 1, "uri", .default = NA_character_)) |>
+    uri <- purrr::map_chr(parsed_richtext, function(f) {
+      purrr::pluck(f, "features", 1, "uri", .default = NA_character_)
+    }) |>
       stats::na.omit() |>
       utils::head(1L) # only one link can be previewed
 
@@ -173,6 +214,6 @@ send_chat_message <- function(chat_id, text, .token = NULL) {
       message = message,
       .token = .token,
       .return = "json"
-    ))
+    )
+  )
 }
-

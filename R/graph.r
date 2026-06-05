@@ -17,21 +17,24 @@
 #' follows_df2 <- get_follows("favstats.eu", limit = 25L,
 #'                            cursor = attr(follows_df, "last_cursor"))
 #' }
-get_followers <- function(actor,
-                          limit = 25L,
-                          cursor = NULL,
-                          parse = TRUE,
-                          verbose = NULL,
-                          .token = NULL) {
-
+get_followers <- function(
+  actor,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- cursor
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} followers, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} followers, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -42,21 +45,30 @@ get_followers <- function(actor,
         cursor = last_cursor,
         .token = NULL,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$followers)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_actors(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -67,21 +79,24 @@ get_followers <- function(actor,
 
 #' @rdname get_followers
 #' @export
-get_follows <- function(actor,
-                        limit = 25L,
-                        cursor = NULL,
-                        parse = TRUE,
-                        verbose = NULL,
-                        .token = NULL) {
-
+get_follows <- function(
+  actor,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- cursor
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} follows, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} follows, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -92,21 +107,30 @@ get_follows <- function(actor,
         cursor = last_cursor,
         .token = NULL,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$follows)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_actors(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -135,22 +159,24 @@ get_follows <- function(actor,
 #' # unfollow our test account
 #' unfollow("atpr.bsky.social")
 #' }
-follow <- function(actor,
-                   verbose = NULL,
-                   .token = NULL) {
-
-  if (verbosity(verbose)) cli::cli_progress_step(
-    msg = "Request to follow {actor}",
-    msg_done = "You now follow {actor}",
-    msg_failed = "Something went wrong"
-  )
+follow <- function(actor, verbose = NULL, .token = NULL) {
+  if (verbosity(verbose)) {
+    cli::cli_progress_step(
+      msg = "Request to follow {actor}",
+      msg_done = "You now follow {actor}",
+      msg_failed = "Something went wrong"
+    )
+  }
   actor_did <- resolve_handle(actor, .token = .token)
 
   repo <- get_token()[["handle"]]
   collection <- "app.bsky.graph.follow"
   record <- list(
     "subject" = actor_did,
-    "createdAt" = format(as.POSIXct(Sys.time(), tz = "UTC"), "%Y-%m-%dT%H:%M:%OS6Z")
+    "createdAt" = format(
+      as.POSIXct(Sys.time(), tz = "UTC"),
+      "%Y-%m-%dT%H:%M:%OS6Z"
+    )
   )
 
   invisible(
@@ -164,15 +190,14 @@ follow <- function(actor,
 
 #' @rdname follow
 #' @export
-unfollow <- function(actor,
-                     verbose = NULL,
-                     .token = NULL) {
-
-  if (verbosity(verbose)) cli::cli_progress_step(
-    msg = "Request to unfollow {actor}",
-    msg_done = "You are no longer following {actor}",
-    msg_failed = "Something went wrong"
-  )
+unfollow <- function(actor, verbose = NULL, .token = NULL) {
+  if (verbosity(verbose)) {
+    cli::cli_progress_step(
+      msg = "Request to unfollow {actor}",
+      msg_done = "You are no longer following {actor}",
+      msg_failed = "Something went wrong"
+    )
+  }
 
   repo <- get_token()[["handle"]]
   collection <- "app.bsky.graph.follow"
@@ -180,10 +205,7 @@ unfollow <- function(actor,
   # list follow records
   resp <- do.call(
     what = com_atproto_repo_list_records,
-    args = list(repo,
-         collection,
-         limit = 100,
-         .token = .token)
+    args = list(repo, collection, limit = 100, .token = .token)
   )
 
   # resolve actor did
@@ -206,4 +228,3 @@ unfollow <- function(actor,
     )
   )
 }
-

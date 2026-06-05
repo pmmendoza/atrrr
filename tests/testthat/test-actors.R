@@ -11,8 +11,9 @@ test_that("user info", {
 })
 
 test_that("user info pagination", {
-  actors <- rep(c("jbgruber.bsky.social",
-                  "benguinaudeau.bsky.social",
-                  "favstats.eu"), 25)
+  actors <- rep(
+    c("jbgruber.bsky.social", "benguinaudeau.bsky.social", "favstats.eu"),
+    25
+  )
   expect_equal(nrow(get_user_info(actor = actors)), 75L)
 })

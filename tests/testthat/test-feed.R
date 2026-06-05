@@ -94,18 +94,23 @@ test_that("search posts", {
   expect_s3_class(search_post("rstats"), "tbl_df")
   expect_gte(nrow(search_post("rstats")), 100L)
   expect_gte(nrow(search_post("#rstats")), 100L)
-  expect_equal({
-    nrow(
-      search_post("{atrrr}",
-                  sort = "top",
-                  since = "2024-12-05T00:00:00.000Z",
-                  until = "2024-12-07T10:00:00.000Z",
-                  mentions = NULL,
-                  author = "jbgruber.bsky.social",
-                  # lang = "",
-                  domain = "jbgruber.github.io",
-                  url = "https://jbgruber.github.io/atrrr",
-                  tag = "rstats")
-    )
-  }, 1L)
+  expect_equal(
+    {
+      nrow(
+        search_post(
+          "{atrrr}",
+          sort = "top",
+          since = "2024-12-05T00:00:00.000Z",
+          until = "2024-12-07T10:00:00.000Z",
+          mentions = NULL,
+          author = "jbgruber.bsky.social",
+          # lang = "",
+          domain = "jbgruber.github.io",
+          url = "https://jbgruber.github.io/atrrr",
+          tag = "rstats"
+        )
+      )
+    },
+    1L
+  )
 })

@@ -4,7 +4,9 @@ the <- new.env()
 inside_pkg <- function() {
   d <- basename(getwd()) == "atrrr"
   p <- 0
-  if (d) p <- any(grepl("Package: atrrr", readLines("DESCRIPTION")))
+  if (d) {
+    p <- any(grepl("Package: atrrr", readLines("DESCRIPTION")))
+  }
   d + p == 2L
 }
 
@@ -28,17 +30,24 @@ f_name <- function(id) {
 flatten_query_params <- function(arg_calls) {
   arg_calls |>
     purrr::compact() |>
-    purrr::imap(~ {
-      .x <- eval(.x)
-      names(.x) <- rep(.y, length(.x))
-      .x
-    }) |>
+    purrr::imap(
+      ~ {
+        .x <- eval(.x)
+        names(.x) <- rep(.y, length(.x))
+        .x
+      }
+    ) |>
     unname() |>
     unlist()
 }
 
 
-make_request <- function(name, params, req_method = c("GET", "POST"), chat = FALSE) {
+make_request <- function(
+  name,
+  params,
+  req_method = c("GET", "POST"),
+  chat = FALSE
+) {
   req_method <- match.arg(req_method)
 
   .token <- params[[".token"]] %||% get_token()
@@ -73,8 +82,8 @@ make_request <- function(name, params, req_method = c("GET", "POST"), chat = FAL
   }
   resp <- httr2::req_perform(req)
 
-  if(.return %in% c("", "json")){
-    if(length(resp$body)){
+  if (.return %in% c("", "json")) {
+    if (length(resp$body)) {
       resp <- httr2::resp_body_json(resp)
     } else {
       resp <- list()
@@ -85,38 +94,37 @@ make_request <- function(name, params, req_method = c("GET", "POST"), chat = FAL
 }
 
 
-parse_at_uri <- function(uri){
-
+parse_at_uri <- function(uri) {
   parts <- uri |>
     stringr::str_split("\\/+")
 
   tibble::tibble(
-    protocol   = purrr::map_chr(parts, 1, .default = NA_character_),
-    repo       = purrr::map_chr(parts, 2, .default = NA_character_),
+    protocol = purrr::map_chr(parts, 1, .default = NA_character_),
+    repo = purrr::map_chr(parts, 2, .default = NA_character_),
     collection = purrr::map_chr(parts, 3, .default = NA_character_),
-    rkey       = purrr::map_chr(parts, 4, .default = NA_character_)
+    rkey = purrr::map_chr(parts, 4, .default = NA_character_)
   )
-
 }
 
-parse_http_url <- function(url){
-
-  parts <- purrr::map(url, function(u) try(httr2::url_parse(u), silent = TRUE) |>
-                        purrr::pluck("path") |>
-                        stringr::str_split("(?<=.)\\/"))
+parse_http_url <- function(url) {
+  parts <- purrr::map(url, function(u) {
+    try(httr2::url_parse(u), silent = TRUE) |>
+      purrr::pluck("path") |>
+      stringr::str_split("(?<=.)\\/")
+  })
 
   if (isTRUE(stringr::str_detect(url, "starter-pack"))) {
     out <- tibble::tibble(
-      collection  = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
-      repo       = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
-      rkey       = purrr::map_chr(parts, c(1, 3), .default = NA_character_)
+      collection = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
+      repo = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
+      rkey = purrr::map_chr(parts, c(1, 3), .default = NA_character_)
     )
   } else {
     out <- tibble::tibble(
-      repo_type  = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
-      repo       = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
+      repo_type = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
+      repo = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
       collection = purrr::map_chr(parts, c(1, 3), .default = NA_character_),
-      rkey       = purrr::map_chr(parts, c(1, 4), .default = NA_character_)
+      rkey = purrr::map_chr(parts, c(1, 4), .default = NA_character_)
     )
   }
 
@@ -134,7 +142,7 @@ parse_http_url <- function(url){
 
 #' Resolve the did behind a handle
 #' @noRd
-resolve_handle <- function(.handle, .token = NULL){
+resolve_handle <- function(.handle, .token = NULL) {
   do.call(
     com_atproto_identity_resolve_handle,
     list(handle = .handle, .token = .token)
@@ -156,7 +164,9 @@ get_thread_root <- function(thread) {
     parent <- parent_1_up
     parent_1_up <- purrr::pluck(parent, "parent")
   }
-  if (is.null(parent)) parent <- thread$thread
+  if (is.null(parent)) {
+    parent <- thread$thread
+  }
   return(parent)
 }
 
@@ -166,7 +176,7 @@ get_thread_root <- function(thread) {
 verbosity <- function(verbose) {
   verbose <- verbose %||%
     getOption("ATR_VERBOSE") %||%
-    Sys.getenv("ATR_VERBOSE", unset = TRUE)  %||%
+    Sys.getenv("ATR_VERBOSE", unset = TRUE) %||%
     getOption("ATRRR_VERBOSE") %||%
     Sys.getenv("ATRRR_VERBOSE", unset = TRUE)
   as.logical(verbose)
@@ -175,11 +185,14 @@ verbosity <- function(verbose) {
 
 #' lexicon seems wrong. translated from https://atproto.com/blog/create-post#images-embeds
 #' @noRd
-com_atproto_repo_upload_blob2 <- function(file,
-                                          .token = NULL) {
-  if (identical(file, "")) return()
+com_atproto_repo_upload_blob2 <- function(file, .token = NULL) {
+  if (identical(file, "")) {
+    return()
+  }
   .token <- .token %||% get_token()
-  req <- httr2::request("https://bsky.social/xrpc/com.atproto.repo.uploadBlob") |>
+  req <- httr2::request(
+    "https://bsky.social/xrpc/com.atproto.repo.uploadBlob"
+  ) |>
     httr2::req_auth_bearer_token(token = .token$accessJwt)
 
   if (stringr::str_detect(file, "^http|^www")) {
@@ -187,10 +200,15 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::req_perform()
 
     # fix blob too larger error https://github.com/JBGruber/atrrr/issues/27
-    if (length(res$body) > 976560 & grepl("image", res$headers$`content-type`)) {
+    if (
+      length(res$body) > 976560 & grepl("image", res$headers$`content-type`)
+    ) {
       rlang::check_installed("magick")
       res$body <- magick::image_read(res$body) |>
-        magick::image_write(format = "jpeg", defines = c("jpeg:extent" = "976.56kb"))
+        magick::image_write(
+          format = "jpeg",
+          defines = c("jpeg:extent" = "976.56kb")
+        )
     }
 
     req |>
@@ -200,14 +218,18 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::resp_body_json()
   } else if (file.exists(file)) {
     rlang::check_installed("mime")
-    if (file.info(file)$size > 976560 & grepl("image", mime::guess_type(file))) {
+    if (
+      file.info(file)$size > 976560 & grepl("image", mime::guess_type(file))
+    ) {
       rlang::check_installed("magick")
       cli::cli_alert_info(
         "Image {file} is too large and will be compressed before uploading"
       )
       file <- magick::image_read(file) |>
-        magick::image_write(path = tempfile(fileext = ".jpeg"),
-                            defines = c("jpeg:extent" = "976.56kb"))
+        magick::image_write(
+          path = tempfile(fileext = ".jpeg"),
+          defines = c("jpeg:extent" = "976.56kb")
+        )
     }
     req |>
       httr2::req_headers("Content-Type" = mime::guess_type(file)) |>
@@ -215,9 +237,10 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::req_perform() |>
       httr2::resp_body_json()
   } else {
-    cli::cli_abort("image/video file {file} could not be found locally or online.")
+    cli::cli_abort(
+      "image/video file {file} could not be found locally or online."
+    )
   }
-
 }
 
 
@@ -235,9 +258,8 @@ did_lookup <- function(did) {
 #' matches the behavior of Python's re.find with multi-byte characters
 #' @noRd
 str_locate_all_bytes <- function(string, pattern) {
-
   # calculate byte length of each character
-  character  <-  strsplit(string, split = "")[[1]]
+  character <- strsplit(string, split = "")[[1]]
   byte_len <- tibble::tibble(
     character,
     b_len = purrr::map_int(character, function(str) length(charToRaw(str)))
@@ -279,9 +301,7 @@ from_ggplot <- function(image) {
   if (methods::is(image, "ggplot")) {
     rlang::check_installed("ggplot2")
     tmp <- tempfile(fileext = ".png")
-    ggplot2::ggsave(tmp, image,
-                    width = 7,
-                    height = 7)
+    ggplot2::ggsave(tmp, image, width = 7, height = 7)
     image <- tmp
   }
   return(image)

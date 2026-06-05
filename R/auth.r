@@ -48,13 +48,14 @@
 #' }
 #'
 #' @export
-auth <- function(user,
-                 password,
-                 domain = "https://bsky.app/",
-                 verbose = TRUE,
-                 overwrite = FALSE,
-                 token = NULL) {
-
+auth <- function(
+  user,
+  password,
+  domain = "https://bsky.app/",
+  verbose = TRUE,
+  overwrite = FALSE,
+  token = NULL
+) {
   if (is.null(token)) {
     url <- list(
       scheme = "https",
@@ -71,9 +72,13 @@ auth <- function(user,
       )
     }
 
-    if(missing(password) || is.null(password)) {
+    if (missing(password) || is.null(password)) {
       if (interactive()) {
-        if (verbosity(verbose)) cli::cli_alert_info("Navigate to {.url {url}} and create a new app password")
+        if (verbosity(verbose)) {
+          cli::cli_alert_info(
+            "Navigate to {.url {url}} and create a new app password"
+          )
+        }
         utils::browseURL(url)
         password <- askpass::askpass("Please enter your app password")
       } else {
@@ -120,10 +125,13 @@ auth <- function(user,
 
   if (isTRUE(sel)) {
     httr2::secret_write_rds(
-      x = token, path = file.path(p, f),
+      x = token,
+      path = file.path(p, f),
       key = I(rlang::hash("musksucks"))
     )
-    if (verbosity(verbose)) cli::cli_alert_success("Succesfully authenticated!")
+    if (verbosity(verbose)) {
+      cli::cli_alert_success("Succesfully authenticated!")
+    }
     invisible(token)
   }
 }
@@ -155,7 +163,7 @@ get_token <- function() {
     token <- read_token(f)
   } else if (!is.null(getOption("httr2_mock", NULL))) {
     token <- list(
-      valid_until = Sys.time() + 10 ^ 7,
+      valid_until = Sys.time() + 10^7,
       accessJwt = "testing",
       handle = "testing",
       password = "testing"
@@ -165,7 +173,12 @@ get_token <- function() {
   }
 
   if (token$valid_until < Sys.time()) {
-    token <- auth(password = token$password, token = token, verbose = FALSE, overwrite = TRUE)
+    token <- auth(
+      password = token$password,
+      token = token,
+      verbose = FALSE,
+      overwrite = TRUE
+    )
   }
 
   invisible(token)
@@ -202,14 +215,20 @@ refresh_token <- function(token) {
 #' @export
 print.bsky_token <- function(x, ...) {
   cli::cli_h1("Blue Sky token")
-  cli::cat_bullet(glue::glue("User: {x$handle}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("User: {x$handle}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
-  cli::cat_bullet(glue::glue("Domain: {x$domain}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("Domain: {x$domain}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
-  cli::cat_bullet(glue::glue("Valid until: {x$valid_until}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("Valid until: {x$valid_until}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
 }
 

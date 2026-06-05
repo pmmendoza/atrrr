@@ -28,21 +28,24 @@
 #' search_user("@UvA_ASCoR")
 #' search_user("rstats", limit = 1000L)
 #' }
-search_user <- function(query,
-                        limit = 25L,
-                        cursor = NULL,
-                        parse = TRUE,
-                        verbose = NULL,
-                        .token = NULL) {
-
+search_user <- function(
+  query,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} records, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} records, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -53,21 +56,30 @@ search_user <- function(query,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$actors)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_response(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -96,10 +108,7 @@ search_user <- function(query,
 #' rstats_user <- search_user("rstats", limit = 2L)
 #' get_user_info(rstats_user$handle)
 #' }
-get_user_info <- function(actor,
-                          parse = TRUE,
-                          .token = NULL) {
-
+get_user_info <- function(actor, parse = TRUE, .token = NULL) {
   fun <- app_bsky_actor_get_profile2
   if (length(actor) > 1) {
     fun <- app_bsky_actor_get_profiles
@@ -109,14 +118,18 @@ get_user_info <- function(actor,
 
   res <- list()
   for (actor_i in actor_l) {
-    res <- append(res, do.call(
-      what = fun,
-      args = list(
-        actor_i,
-        .token = .token,
-        .return = "json"
-      )) |>
-        purrr::pluck("profiles"))
+    res <- append(
+      res,
+      do.call(
+        what = fun,
+        args = list(
+          actor_i,
+          .token = .token,
+          .return = "json"
+        )
+      ) |>
+        purrr::pluck("profiles")
+    )
   }
 
   if (parse) {
@@ -127,13 +140,21 @@ get_user_info <- function(actor,
 
 
 # app_bsky_actor_get_profile returns different format, making it harder to parse
-app_bsky_actor_get_profile2 <- function(actor, .token = NULL, .return = c("json", "resp")) {
-  list(profiles = list(make_request(
-    name = "bsky.social/xrpc/app.bsky.actor.getProfile",
-    params = as.list(match.call())[-1] |>
-      purrr::imap(~ {
-        eval(.x, envir = parent.frame())
-      }),
-    req_method = "GET"
-  )))
+app_bsky_actor_get_profile2 <- function(
+  actor,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  list(
+    profiles = list(make_request(
+      name = "bsky.social/xrpc/app.bsky.actor.getProfile",
+      params = as.list(match.call())[-1] |>
+        purrr::imap(
+          ~ {
+            eval(.x, envir = parent.frame())
+          }
+        ),
+      req_method = "GET"
+    ))
+  )
 }
