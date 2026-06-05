@@ -145,6 +145,7 @@ get_list <- function(
 
 
 #' @rdname get_list
+#' @export
 get_list_feed <- function(
   list,
   limit = 25,
