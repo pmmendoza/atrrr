@@ -65,7 +65,7 @@ make_request <- function(
     req <- httr2::request(sess_url) |>
       httr2::req_url_path(name) |>
       httr2::req_headers("Atproto-Proxy" = "did:web:api.bsky.chat#bsky_chat")
-  } else if (grepl("/xrpc/com\\.atproto\\.", name) && !is.null(.token$pds)) {
+  } else if (!is.null(.token$pds)) {
     method <- sub("^[^/]+/xrpc/", "", name)
     req <- httr2::request(paste0(.token$pds, "/xrpc/", method))
   } else {
