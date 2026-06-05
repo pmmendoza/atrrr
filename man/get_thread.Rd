@@ -4,10 +4,13 @@
 \alias{get_thread}
 \title{Get all skeets in a thread}
 \usage{
-get_thread(post_url, .token = NULL)
+get_thread(post_url, parse = TRUE, .token = NULL)
 }
 \arguments{
 \item{post_url}{the URL of any skeet in a thread.}
+
+\item{parse}{Parse the results or return the original nested object sent by
+the server.}
 
 \item{.token}{If you manage your own tokens, you can supply it here. Usually
 \code{NULL} is OK and will automatically load or guide you to generate a

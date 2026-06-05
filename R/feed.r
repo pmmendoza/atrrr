@@ -593,6 +593,7 @@ get_feed_likes <- function(feed_url,
 #' get_thread("https://bsky.app/profile/jbgruber.bsky.social/post/3kbi57u4sys2l")
 #' }
 get_thread <- function(post_url,
+                       parse = TRUE,
                        .token = NULL) {
 
   post_uri <- convert_http_to_at(post_url, .token = .token)
@@ -601,8 +602,11 @@ get_thread <- function(post_url,
   thread <- do.call(app_bsky_feed_get_post_thread,
                     list(purrr::pluck(root, "post", "uri"), .token = .token))
 
-  return(parse_threads(thread))
-
+  if (parse) {
+    return(parse_threads(thread))
+  } else {
+    thread
+  }
 }
 
 
@@ -646,8 +650,10 @@ get_replies <- function(post_url,
 #'   facets.
 #' @param link instead of adding a link in text (gets parsed automatically),
 #'   it's also possible to add a link directly (and save some characters).
-#' @param preview_card display a preview card for links included in the `text`
-#'   or `link` (if images or videos are included, they take precedence).
+#' @param preview_card logical. Display a preview card for links included in the
+#'   `text` or `link` (if images or videos are included, they take precedence).
+#'   alternatively, fetch a card with [fetch_preview()] and supply the object
+#'   here.
 #' @param post_url URL or URI of post to delete.
 #' @inheritParams search_user
 #'
@@ -715,26 +721,6 @@ post <- function(text,
     )
   }
 
-  # quote <- "https://bsky.app/profile/favstats.eu/post/3kc57mkoi6a2k"
-  if (!is.null(quote)) {
-    quote <- ifelse(grepl("^http", quote),
-                    convert_http_to_at(quote, .token = .token),
-                    quote)
-
-    quote_post <- do.call(app_bsky_feed_get_posts, list(quote, .token = .token))
-
-
-    # thread <- do.call(app_bsky_feed_get_post_thread, list(quote, .token = .token))
-    # thread_root <- get_thread_root(thread)
-    record[["embed"]] <- list(
-      "$type" = "app.bsky.embed.record",
-      "record" = list(
-        "uri" = quote_post$posts[[1]]$uri,
-        "cid" = quote_post$posts[[1]]$cid
-      )
-    )
-  }
-
   if (!is.null(image) && !identical(image, "")) {
     image <- purrr::map_chr(image, from_ggplot)
     rlang::check_installed("magick")
@@ -772,12 +758,38 @@ post <- function(text,
 
   # link is only added when no image or video exist, but takes precedence over
   # links in text
-  if (!is.null(link) && !purrr::pluck_exists(record, "embed") && preview_card) {
+  if (!is.null(link) && !purrr::pluck_exists(record, "embed") && isTRUE(preview_card)) {
     record$embed <- fetch_preview(link)
     # record$embed$uri can't be empty, but the preview endpoint returns empty
     # uris sometimes. Fixing it here
     if (purrr::pluck(record, "embed", "external", "uri") == "") {
       purrr::pluck(record, "embed", "external", "uri") <- link
+    }
+  } else if (is.list(preview_card) && !purrr::pluck_exists(record, "embed")) {
+    record$embed <- preview_card
+  }
+
+  if (!is.null(quote)) {
+    quote <- ifelse(grepl("^http", quote),
+                    convert_http_to_at(quote, .token = .token),
+                    quote)
+
+    quote_post <- do.call(app_bsky_feed_get_posts, list(quote, .token = .token))
+    embed_record <- list(
+      "$type" = "app.bsky.embed.record",
+      "record" = list(
+        "uri" = quote_post$posts[[1]]$uri,
+        "cid" = quote_post$posts[[1]]$cid
+      )
+    )
+    if (purrr::pluck_exists(record, "embed")) {
+      record[["embed"]] <- list(
+        "$type" = "app.bsky.embed.recordWithMedia",
+        "record" = embed_record,
+        "media" = record[["embed"]]
+      )
+    } else {
+      record[["embed"]] <- embed_record
     }
   }
 
@@ -785,7 +797,7 @@ post <- function(text,
   parsed_richtext <- parse_facets(text)
   if (!any(is.na(unlist(parsed_richtext)))) {
     record[["facets"]] <- parsed_richtext
-    if (!purrr::pluck_exists(record, "embed") && preview_card) {
+    if (!purrr::pluck_exists(record, "embed") && isTRUE(preview_card)) {
       uri <- purrr::map_chr(parsed_richtext, function(f)
         purrr::pluck(f, "features", 1, "uri", .default = NA_character_)) |>
         stats::na.omit() |>
@@ -807,6 +819,46 @@ post <- function(text,
 #' @rdname post
 #' @export
 post_skeet <- post
+
+
+#' Fetch link preview
+#'
+#' @param uri URL or URI to fetch preview for.
+#'
+#' @returns list strutured for use as preview_card
+#' @export
+#'
+#' @examples
+#' wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
+#' \dontrun{
+#' post_skeet("Do you know the AT Protocol?", preview_card = wiki_preview)
+#' }
+fetch_preview <- function(uri) {
+  # this is the API bsky.app is using. Not sure how robust it is
+  resp <- httr2::request("https://cardyb.bsky.app/v1/extract") |>
+    httr2::req_url_query(url = uri) |>
+    httr2::req_error(is_error = function(resp) FALSE) |>
+    httr2::req_perform()
+
+  if (httr2::resp_status(resp) < 400L) {
+    preview <- resp |>
+      httr2::resp_body_json()
+    embed <- list(`$type` = "app.bsky.embed.external",
+                  external = list(uri = preview$url,
+                                  title = preview$title,
+                                  description = preview$description))
+    if (purrr::pluck_exists(preview, "image")) {
+      embed$external$thumb <-
+        com_atproto_repo_upload_blob2(purrr::pluck(preview, "image"))$blob
+    }
+  } else {
+    embed <- list(`$type` = "app.bsky.embed.external",
+                  external = list(uri = uri,
+                                  title = "",
+                                  description = ""))
+  }
+  return(embed)
+}
 
 
 #' @rdname post
