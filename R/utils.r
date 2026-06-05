@@ -194,7 +194,10 @@ com_atproto_repo_upload_blob2 <- function(file, .token = NULL) {
   }
   .token <- .token %||% get_token()
   req <- httr2::request(
-    paste0(.token$pds %||% "https://bsky.social", "/xrpc/com.atproto.repo.uploadBlob")
+    paste0(
+      .token$pds %||% "https://bsky.social",
+      "/xrpc/com.atproto.repo.uploadBlob"
+    )
   ) |>
     httr2::req_auth_bearer_token(token = .token$accessJwt)
 
@@ -259,7 +262,9 @@ did_lookup <- function(did) {
 
 
 resolve_pds <- function(handle) {
-  did <- httr2::request("https://bsky.social/xrpc/com.atproto.identity.resolveHandle") |>
+  did <- httr2::request(
+    "https://bsky.social/xrpc/com.atproto.identity.resolveHandle"
+  ) |>
     httr2::req_url_query(handle = handle) |>
     httr2::req_error(body = error_parse) |>
     httr2::req_perform() |>

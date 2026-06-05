@@ -789,7 +789,8 @@ post <- function(
   tags = NULL,
   preview_card = TRUE,
   verbose = NULL,
-  .token = NULL
+  .token = NULL,
+  .reply = NULL
 ) {
   cli::cli_progress_step(
     msg = "Request to post {.emph {text}}",
@@ -818,7 +819,9 @@ post <- function(
     })
   )
 
-  if (!is.null(in_reply_to)) {
+  if (!is.null(.reply)) {
+    record[["reply"]] <- .reply
+  } else if (!is.null(in_reply_to)) {
     in_reply_to <- ifelse(
       grepl("^http", in_reply_to),
       convert_http_to_at(in_reply_to, .token = .token),
@@ -1079,21 +1082,35 @@ post_thread <- function(
     )
   }
 
-  ref <- NULL
+  root_resp <- NULL
+  prev_resp <- NULL
   refs <- data.frame()
 
   for (i in seq_along(thread_df$text)) {
-    ref <- do.call(
+    reply_arg <- if (!is.null(root_resp)) {
+      list(
+        root = list(uri = root_resp$uri, cid = root_resp$cid),
+        parent = list(uri = prev_resp$uri, cid = prev_resp$cid)
+      )
+    }
+
+    resp <- do.call(
       what = post_skeet,
       args = list(
         text = thread_df$text[[i]],
         image = thread_df$image[[i]],
         image_alt = thread_df$image_alt[[i]],
-        in_reply_to = ref
+        .reply = reply_arg,
+        verbose = verbose,
+        .token = .token
       )
     )
-    refs <- rbind(refs, as.data.frame(ref))
-    ref <- ref$uri
+
+    if (is.null(root_resp)) {
+      root_resp <- resp
+    }
+    prev_resp <- resp
+    refs <- rbind(refs, as.data.frame(resp))
   }
   return(refs)
 }
