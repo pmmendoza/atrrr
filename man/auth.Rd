@@ -17,7 +17,7 @@ auth(
 \item{user}{Your user handle (e.g, benguinaudeau.bsky.social).}
 
 \item{password}{Your app password (usually created on
-\url{https://bsky.app/settings/app-passwords}).}
+https://bsky.app/settings/app-passwords).}
 
 \item{domain}{For now https://bsky.app/, but could change in the future.}
 

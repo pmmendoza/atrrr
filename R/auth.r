@@ -5,7 +5,7 @@
 #'
 #' @param user Your user handle (e.g, benguinaudeau.bsky.social).
 #' @param password Your app password (usually created on
-#'   <https://bsky.app/settings/app-passwords>).
+#'   https://bsky.app/settings/app-passwords).
 #' @param domain For now https://bsky.app/, but could change in the future.
 #' @param overwrite If TRUE, overwrites old token without asking for
 #'   confirmation.

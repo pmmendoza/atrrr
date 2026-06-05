@@ -25,7 +25,7 @@ how to provide a function that handles the
 firehose stream.
 }
 \examples{
-\dontshow{if (rlang::is_installed("libipldr")) withAutoprint(\{ # examplesIf}
+\dontrun{
 # an example function that saves events as RDS files
 stream2rds <- function(events) {
   for (event in events) {
@@ -65,5 +65,5 @@ print_stream <- function(events) {
   }
 }
 stream_firehose(print_stream, timeout = 15)
-\dontshow{\}) # examplesIf}
+}
 }

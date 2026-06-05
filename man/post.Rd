@@ -86,6 +86,10 @@ FALSE)}.}
 \code{NULL} is OK and will automatically load or guide you to generate a
 token.}
 
+\item{.reply}{a pre-built reply list with \code{root} and \code{parent} elements (each
+containing \code{uri} and \code{cid}). Used for \code{\link[=post_thread]{post_thread()}} not really important
+for users.}
+
 \item{post_url}{URL or URI of post to delete.}
 }
 \value{

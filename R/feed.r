@@ -766,6 +766,9 @@ get_replies <- function(post_url, .token = NULL) {
 #'   alternatively, fetch a card with [fetch_preview()] and supply the object
 #'   here.
 #' @param post_url URL or URI of post to delete.
+#' @param .reply a pre-built reply list with `root` and `parent` elements (each
+#'   containing `uri` and `cid`). Used for [post_thread()] not really important
+#'   for users.
 #' @inheritParams search_user
 #'
 #' @returns list of the URI and CID of the post (invisible)
