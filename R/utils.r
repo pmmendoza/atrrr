@@ -166,7 +166,9 @@ get_thread_root <- function(thread) {
 verbosity <- function(verbose) {
   verbose <- verbose %||%
     getOption("ATR_VERBOSE") %||%
-    Sys.getenv("ATR_VERBOSE", unset = TRUE)
+    Sys.getenv("ATR_VERBOSE", unset = TRUE)  %||%
+    getOption("ATRRR_VERBOSE") %||%
+    Sys.getenv("ATRRR_VERBOSE", unset = TRUE)
   as.logical(verbose)
 }
 
