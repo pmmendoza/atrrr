@@ -87,7 +87,12 @@ auth <- function(
     }
 
     if (!is.null(user) && !is.null(password)) {
-      token <- req_token(user, password)
+      pds <- tryCatch(
+        resolve_pds(user),
+        error = function(e) "https://bsky.social"
+      )
+      token <- req_token(user, password, pds = pds)
+      token$pds <- pds
     } else {
       cli::cli_abort("You need to supply username and password.")
     }
@@ -137,9 +142,10 @@ auth <- function(
 }
 
 
-req_token <- function(user, password) {
+req_token <- function(user, password, pds = "https://bsky.social") {
   # https://atproto.com/specs/xrpc#authentication
-  httr2::request("https://bsky.social/xrpc/com.atproto.server.createSession") |>
+  httr2::request(pds) |>
+    httr2::req_url_path("/xrpc/com.atproto.server.createSession") |>
     httr2::req_method("POST") |>
     httr2::req_body_json(list(
       identifier = user,
@@ -200,7 +206,11 @@ refresh_token <- function(token) {
   #   httr2::req_error(body = error_parse) |>
   #   httr2::req_perform() |>
   #   httr2::resp_body_json()
-  req_token(token$handle, token$password)
+  req_token(
+    token$handle,
+    token$password,
+    pds = token$pds %||% "https://bsky.social"
+  )
 }
 
 
@@ -217,6 +227,11 @@ print.bsky_token <- function(x, ...) {
   cli::cli_h1("Blue Sky token")
   cli::cat_bullet(
     glue::glue("User: {x$handle}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
+  )
+  cli::cat_bullet(
+    glue::glue("PDS: {x$pds %||% 'https://bsky.social'}"),
     background_col = "#0560FF",
     col = "#F3F9FF"
   )

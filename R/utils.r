@@ -65,6 +65,9 @@ make_request <- function(
     req <- httr2::request(sess_url) |>
       httr2::req_url_path(name) |>
       httr2::req_headers("Atproto-Proxy" = "did:web:api.bsky.chat#bsky_chat")
+  } else if (grepl("/xrpc/com\\.atproto\\.", name) && !is.null(.token$pds)) {
+    method <- sub("^[^/]+/xrpc/", "", name)
+    req <- httr2::request(paste0(.token$pds, "/xrpc/", method))
   } else {
     req <- httr2::request(paste0("https://", name))
   }
@@ -191,7 +194,7 @@ com_atproto_repo_upload_blob2 <- function(file, .token = NULL) {
   }
   .token <- .token %||% get_token()
   req <- httr2::request(
-    "https://bsky.social/xrpc/com.atproto.repo.uploadBlob"
+    paste0(.token$pds %||% "https://bsky.social", "/xrpc/com.atproto.repo.uploadBlob")
   ) |>
     httr2::req_auth_bearer_token(token = .token$accessJwt)
 
@@ -252,6 +255,27 @@ did_lookup <- function(did) {
     httr2::req_perform() |>
     httr2::resp_body_json(check_type = FALSE) |>
     purrr::pluck("alsoKnownAs", 1, .default = did)
+}
+
+
+resolve_pds <- function(handle) {
+  did <- httr2::request("https://bsky.social/xrpc/com.atproto.identity.resolveHandle") |>
+    httr2::req_url_query(handle = handle) |>
+    httr2::req_error(body = error_parse) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json() |>
+    purrr::pluck("did")
+
+  doc <- httr2::request(paste0("https://plc.directory/", did)) |>
+    httr2::req_error(body = error_parse) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json(check_type = FALSE)
+
+  services <- doc[["service"]] %||% list()
+  pds <- purrr::keep(services, ~ .x[["type"]] == "AtprotoPersonalDataServer") |>
+    purrr::pluck(1, "serviceEndpoint")
+
+  pds %||% "https://bsky.social"
 }
 
 
