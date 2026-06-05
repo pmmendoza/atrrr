@@ -206,11 +206,10 @@ refresh_token <- function(token) {
   #   httr2::req_error(body = error_parse) |>
   #   httr2::req_perform() |>
   #   httr2::resp_body_json()
-  req_token(
-    token$handle,
-    token$password,
-    pds = token$pds %||% "https://bsky.social"
-  )
+  pds <- token$pds %||% "https://bsky.social"
+  new_tok <- req_token(token$handle, token$password, pds = pds)
+  new_tok$pds <- pds
+  new_tok
 }
 
 
