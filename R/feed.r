@@ -1047,7 +1047,7 @@ delete_post <- delete_skeet
 #' @param images paths to images to be included in each post. This may be a character vector, or a list of character vectors if multiple images per post are required.
 #' @param image_alts alt texts for the images to be included in each post. If images is a list of character vectors, this should also be a list of character vectors and have the same shape.
 #' @param thread_df instead of defining texts, images and image_alts, you can
-#'   also create a data frame with the information in columns of the same names.
+#'   also create a data frame with the information in columns `text`, `image`, and `image_alt`.
 #' @inheritParams search_user
 #'
 #' @return list of the URIs and CIDs of the posts (invisible)
