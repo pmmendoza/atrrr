@@ -106,8 +106,7 @@ auth <- function(
   token$domain <- domain
   token$accessJwt <- token$accessJwt
   token$refreshJwt <- token$refreshJwt
-  # it's not clear how long a token is valid. The docs say 'couple minutes'
-  token$valid_until <- Sys.time() + 3 * 60
+  token$valid_until <- Sys.time() + 2 * 60 * 60
 
   class(token) <- "bsky_token"
 
@@ -193,9 +192,24 @@ refresh_token <- function(token) {
     httr2::req_url_path("/xrpc/com.atproto.server.refreshSession") |>
     httr2::req_method("POST") |>
     httr2::req_auth_bearer_token(token = token$refreshJwt) |>
-    httr2::req_error(body = error_parse) |>
+    httr2::req_error(
+      is_error = function(resp) {
+        httr2::resp_status(resp) >= 400 &
+          !grepl(
+            "Token has been revoked",
+            httr2::resp_body_string(resp),
+            fixed = TRUE
+          )
+      },
+      body = error_parse
+    ) |>
     httr2::req_perform() |>
     httr2::resp_body_json()
+
+  if (purrr::pluck_exists(new_tok, "error")) {
+    new_tok <- req_token(token$handle, token$password, pds = pds)
+  }
+
   new_tok$pds <- pds
   new_tok
 }
