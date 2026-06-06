@@ -966,8 +966,8 @@ post_skeet <- post
 #' @export
 #'
 #' @examples
-#' wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
 #' \dontrun{
+#' wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
 #' post_skeet("Do you know the AT Protocol?", preview_card = wiki_preview)
 #' }
 fetch_preview <- function(uri) {

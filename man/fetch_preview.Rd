@@ -16,8 +16,8 @@ list strutured for use as preview_card
 Fetch link preview
 }
 \examples{
-wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
 \dontrun{
+wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
 post_skeet("Do you know the AT Protocol?", preview_card = wiki_preview)
 }
 }
