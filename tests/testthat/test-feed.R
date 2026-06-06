@@ -1,34 +1,40 @@
 test_that("get skeets by author", {
+  skip_on_cran()
   expect_type(get_skeets_authored_by("andrew.heiss.phd", parse = FALSE), "list")
   expect_s3_class(get_skeets_authored_by("andrew.heiss.phd"), "tbl_df")
   expect_gte(nrow(get_skeets_authored_by("andrew.heiss.phd")), 1L)
 })
 
 test_that("get feeds by author", {
+  skip_on_cran()
   expect_type(get_feeds_created_by("andrew.heiss.phd", parse = FALSE), "list")
   expect_s3_class(get_feeds_created_by("andrew.heiss.phd"), "tbl_df")
   expect_gte(nrow(get_feeds_created_by("andrew.heiss.phd")), 1L)
 })
 
 test_that("search feeds", {
+  skip_on_cran()
   expect_type(get_feeds_created_by("andrew.heiss.phd", parse = FALSE), "list")
   expect_s3_class(get_feeds_created_by("andrew.heiss.phd"), "tbl_df")
   expect_gte(nrow(get_feeds_created_by("andrew.heiss.phd")), 1L)
 })
 
 test_that("search feeds", {
+  skip_on_cran()
   expect_type(search_feed("#rstats", parse = FALSE), "list")
   expect_s3_class(search_feed("#rstats"), "tbl_df")
   expect_gte(nrow(search_feed("#rstats")), 1L)
 })
 
 test_that("get feed", {
+  skip_on_cran()
   expect_type(search_feed("#rstats", parse = FALSE), "list")
   expect_s3_class(search_feed("#rstats"), "tbl_df")
   expect_gte(nrow(search_feed("#rstats")), 1L)
 })
 
 test_that("get feed", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/did:plc:2zcfjzyocp6kapg6jc4eacok/feed/aaaeckvqc3gzg"
   expect_type(get_feed(link, parse = FALSE), "list")
   expect_s3_class(get_feed(link), "tbl_df")
@@ -38,6 +44,7 @@ test_that("get feed", {
 })
 
 test_that("get own feed", {
+  skip_on_cran()
   expect_type(get_own_timeline(parse = FALSE), "list")
   expect_s3_class(get_own_timeline(), "tbl_df")
   expect_gte(nrow(get_own_timeline()), 1L)
@@ -45,6 +52,7 @@ test_that("get own feed", {
 })
 
 test_that("get likes", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/jbgruber.bsky.social/post/3kbi55xm6u62v"
   expect_type(get_likes(link, parse = FALSE), "list")
   expect_s3_class(get_likes(link), "tbl_df")
@@ -54,6 +62,7 @@ test_that("get likes", {
 })
 
 test_that("get reposts", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/jbgruber.bsky.social/post/3kbi55xm6u62v"
   expect_type(get_reposts(link, parse = FALSE), "list")
   expect_s3_class(get_reposts(link), "tbl_df")
@@ -63,6 +72,7 @@ test_that("get reposts", {
 })
 
 test_that("get feed likes", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/did:plc:2zcfjzyocp6kapg6jc4eacok/feed/aaaeckvqc3gzg"
   expect_type(get_feed_likes(link, parse = FALSE), "list")
   expect_s3_class(get_feed_likes(link), "tbl_df")
@@ -72,6 +82,7 @@ test_that("get feed likes", {
 })
 
 test_that("get thread", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/jbgruber.bsky.social/post/3kbi57u4sys2l"
   expect_s3_class(get_thread(link), "tbl_df")
   # should be 4, but since requests are mocked, only children, not parents are
@@ -82,6 +93,7 @@ test_that("get thread", {
 })
 
 test_that("get replies", {
+  skip_on_cran()
   link <- "https://bsky.app/profile/jbgruber.bsky.social/post/3kbi57u4sys2l"
   expect_s3_class(get_replies(link), "tbl_df")
   expect_gte(nrow(get_replies(link)), 2L)
@@ -90,6 +102,7 @@ test_that("get replies", {
 })
 
 test_that("search posts", {
+  skip_on_cran()
   expect_type(search_post("rstats", parse = FALSE), "list")
   expect_s3_class(search_post("rstats"), "tbl_df")
   expect_gte(nrow(search_post("rstats")), 100L)
