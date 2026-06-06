@@ -186,11 +186,36 @@ app_bsky_graph_get_lists <- function(
   actor,
   limit = NULL,
   cursor = NULL,
+  purposes = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.graph.getLists",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_graph_get_lists_with_membership
+#' Enumerates the lists created by the session user, and includes membership information about `actor` in those lists. Only supports curation and moderation lists (no reference lists, used in starter packs). Requires auth.
+#' @noRd
+app_bsky_graph_get_lists_with_membership <- function(
+  actor,
+  limit = NULL,
+  cursor = NULL,
+  purposes = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.graph.getListsWithMembership",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {
@@ -277,6 +302,29 @@ app_bsky_graph_get_starter_packs <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.graph.getStarterPacks",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_graph_get_starter_packs_with_membership
+#' Enumerates the starter packs created by the session user, and includes membership information about `actor` in those starter packs. Requires auth.
+#' @noRd
+app_bsky_graph_get_starter_packs_with_membership <- function(
+  actor,
+  limit = NULL,
+  cursor = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.graph.getStarterPacksWithMembership",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {

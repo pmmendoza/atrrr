@@ -225,7 +225,7 @@ com_atproto_server_delete_account <- function(
 
 
 #' com_atproto_server_delete_session
-#' Delete the current session. Requires auth.
+#' Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').
 #' @noRd
 com_atproto_server_delete_session <- function(
   .token = NULL,

@@ -1,3 +1,23 @@
+#' app_bsky_unspecced_get_age_assurance_state
+#' Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.
+#' @noRd
+app_bsky_unspecced_get_age_assurance_state <- function(
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getAgeAssuranceState",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
 #' app_bsky_unspecced_get_config
 #' Get miscellaneous runtime configuration.
 #' @noRd
@@ -7,6 +27,72 @@ app_bsky_unspecced_get_config <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.unspecced.getConfig",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_onboarding_suggested_starter_packs
+#' Get a list of suggested starterpacks for onboarding
+#' @noRd
+app_bsky_unspecced_get_onboarding_suggested_starter_packs <- function(
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getOnboardingSuggestedStarterPacks",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_onboarding_suggested_starter_packs_skeleton
+#' Get a skeleton of suggested starterpacks for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+#' @noRd
+app_bsky_unspecced_get_onboarding_suggested_starter_packs_skeleton <- function(
+  viewer = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_onboarding_suggested_users_skeleton
+#' Get a skeleton of suggested users for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedOnboardingUsers
+#' @noRd
+app_bsky_unspecced_get_onboarding_suggested_users_skeleton <- function(
+  viewer = NULL,
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {
@@ -46,7 +132,6 @@ app_bsky_unspecced_get_popular_feed_generators <- function(
 #' @noRd
 app_bsky_unspecced_get_post_thread_other_v2 <- function(
   anchor,
-  prioritizeFollowedUsers = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {
@@ -71,7 +156,6 @@ app_bsky_unspecced_get_post_thread_v2 <- function(
   above = NULL,
   below = NULL,
   branchingFactor = NULL,
-  prioritizeFollowedUsers = NULL,
   sort = NULL,
   .token = NULL,
   .return = c("json", "resp")
@@ -121,6 +205,28 @@ app_bsky_unspecced_get_suggested_feeds_skeleton <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedFeedsSkeleton",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_onboarding_users
+#' Get a list of suggested users for onboarding
+#' @noRd
+app_bsky_unspecced_get_suggested_onboarding_users <- function(
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedOnboardingUsers",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {
@@ -186,6 +292,139 @@ app_bsky_unspecced_get_suggested_users <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsers",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_discover
+#' Get a list of suggested users for the Discover page
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_discover <- function(
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForDiscover",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_discover_skeleton
+#' Get a skeleton of suggested users for the Discover page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_discover_skeleton <- function(
+  viewer = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_explore
+#' Get a list of suggested users for the Explore page
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_explore <- function(
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForExplore",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_explore_skeleton
+#' Get a skeleton of suggested users for the Explore page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForExplore
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_explore_skeleton <- function(
+  viewer = NULL,
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForExploreSkeleton",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_see_more
+#' Get a list of suggested users for the See More page
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_see_more <- function(
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForSeeMore",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_get_suggested_users_for_see_more_skeleton
+#' Get a skeleton of suggested users for the See More page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore
+#' @noRd
+app_bsky_unspecced_get_suggested_users_for_see_more_skeleton <- function(
+  viewer = NULL,
+  category = NULL,
+  limit = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {
@@ -325,6 +564,29 @@ app_bsky_unspecced_get_trends_skeleton <- function(
         }
       ),
     req_method = "GET"
+  )
+}
+
+
+#' app_bsky_unspecced_init_age_assurance
+#' Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.
+#' @noRd
+app_bsky_unspecced_init_age_assurance <- function(
+  email,
+  language,
+  countryCode,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.unspecced.initAgeAssurance",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
   )
 }
 

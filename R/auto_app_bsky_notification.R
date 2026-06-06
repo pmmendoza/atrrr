@@ -171,11 +171,36 @@ app_bsky_notification_register_push <- function(
   token,
   platform,
   appId,
+  ageRestricted = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {
   make_request(
     name = "bsky.social/xrpc/app.bsky.notification.registerPush",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
+  )
+}
+
+
+#' app_bsky_notification_unregister_push
+#' The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.
+#' @noRd
+app_bsky_notification_unregister_push <- function(
+  serviceDid,
+  token,
+  platform,
+  appId,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/app.bsky.notification.unregisterPush",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {

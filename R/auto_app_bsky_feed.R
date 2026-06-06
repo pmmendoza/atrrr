@@ -398,6 +398,7 @@ app_bsky_feed_search_posts <- function(
 #' @noRd
 app_bsky_feed_send_interactions <- function(
   interactions,
+  feed = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {

@@ -1,3 +1,25 @@
+#' tools_ozone_moderation_cancel_scheduled_actions
+#' Cancel all pending scheduled moderation actions for specified subjects
+#' @noRd
+tools_ozone_moderation_cancel_scheduled_actions <- function(
+  subjects,
+  comment = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/tools.ozone.moderation.cancelScheduledActions",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
+  )
+}
+
+
 #' tools_ozone_moderation_emit_event
 #' Take a moderation action on an actor.
 #' @noRd
@@ -7,6 +29,8 @@ tools_ozone_moderation_emit_event <- function(
   createdBy,
   subjectBlobCids = NULL,
   modTool = NULL,
+  externalId = NULL,
+  reportAction = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {
@@ -19,6 +43,27 @@ tools_ozone_moderation_emit_event <- function(
         }
       ),
     req_method = "POST"
+  )
+}
+
+
+#' tools_ozone_moderation_get_account_timeline
+#' Get timeline of all available events of an account. This includes moderation events, account history and did history.
+#' @noRd
+tools_ozone_moderation_get_account_timeline <- function(
+  did,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/tools.ozone.moderation.getAccountTimeline",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
   )
 }
 
@@ -171,6 +216,32 @@ tools_ozone_moderation_get_subjects <- function(
 }
 
 
+#' tools_ozone_moderation_list_scheduled_actions
+#' List scheduled moderation actions with optional filtering
+#' @noRd
+tools_ozone_moderation_list_scheduled_actions <- function(
+  statuses,
+  startsAfter = NULL,
+  endsBefore = NULL,
+  subjects = NULL,
+  limit = NULL,
+  cursor = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/tools.ozone.moderation.listScheduledActions",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
+  )
+}
+
+
 #' tools_ozone_moderation_query_events
 #' List moderation events related to a subject.
 #' @noRd
@@ -194,6 +265,9 @@ tools_ozone_moderation_query_events <- function(
   reportTypes = NULL,
   policies = NULL,
   modTool = NULL,
+  batchId = NULL,
+  ageAssuranceState = NULL,
+  withStrike = NULL,
   cursor = NULL,
   .token = NULL,
   .return = c("json", "resp")
@@ -249,6 +323,8 @@ tools_ozone_moderation_query_statuses <- function(
   minReportedRecordsCount = NULL,
   minTakendownRecordsCount = NULL,
   minPriorityScore = NULL,
+  minStrikeCount = NULL,
+  ageAssuranceState = NULL,
   .token = NULL,
   .return = c("json", "resp")
 ) {
@@ -261,6 +337,31 @@ tools_ozone_moderation_query_statuses <- function(
         }
       ),
     req_method = "GET"
+  )
+}
+
+
+#' tools_ozone_moderation_schedule_action
+#' Schedule a moderation action to be executed at a future time
+#' @noRd
+tools_ozone_moderation_schedule_action <- function(
+  action,
+  subjects,
+  createdBy,
+  scheduling,
+  modTool = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/tools.ozone.moderation.scheduleAction",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
   )
 }
 

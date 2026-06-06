@@ -19,6 +19,29 @@ com_atproto_temp_add_reserved_handle <- function(
 }
 
 
+#' com_atproto_temp_check_handle_availability
+#' Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.
+#' @noRd
+com_atproto_temp_check_handle_availability <- function(
+  handle,
+  email = NULL,
+  birthDate = NULL,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/com.atproto.temp.checkHandleAvailability",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
 #' com_atproto_temp_check_signup_queue
 #' Check accounts location in signup queue.
 #' @noRd
@@ -28,6 +51,27 @@ com_atproto_temp_check_signup_queue <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/com.atproto.temp.checkSignupQueue",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "GET"
+  )
+}
+
+
+#' com_atproto_temp_dereference_scope
+#' Allows finding the oauth permission scope from a reference
+#' @noRd
+com_atproto_temp_dereference_scope <- function(
+  scope,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/com.atproto.temp.dereferenceScope",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {
@@ -71,6 +115,27 @@ com_atproto_temp_request_phone_verification <- function(
 ) {
   make_request(
     name = "bsky.social/xrpc/com.atproto.temp.requestPhoneVerification",
+    params = as.list(match.call())[-1] |>
+      purrr::imap(
+        ~ {
+          eval(.x, envir = parent.frame())
+        }
+      ),
+    req_method = "POST"
+  )
+}
+
+
+#' com_atproto_temp_revoke_account_credentials
+#' Revoke sessions, password, and app passwords associated with account. May be resolved by a password reset.
+#' @noRd
+com_atproto_temp_revoke_account_credentials <- function(
+  account,
+  .token = NULL,
+  .return = c("json", "resp")
+) {
+  make_request(
+    name = "bsky.social/xrpc/com.atproto.temp.revokeAccountCredentials",
     params = as.list(match.call())[-1] |>
       purrr::imap(
         ~ {

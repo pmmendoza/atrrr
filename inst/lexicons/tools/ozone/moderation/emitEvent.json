@@ -32,7 +32,13 @@
                 "tools.ozone.moderation.defs#accountEvent",
                 "tools.ozone.moderation.defs#identityEvent",
                 "tools.ozone.moderation.defs#recordEvent",
-                "tools.ozone.moderation.defs#modEventPriorityScore"
+                "tools.ozone.moderation.defs#modEventPriorityScore",
+                "tools.ozone.moderation.defs#ageAssuranceEvent",
+                "tools.ozone.moderation.defs#ageAssuranceOverrideEvent",
+                "tools.ozone.moderation.defs#ageAssurancePurgeEvent",
+                "tools.ozone.moderation.defs#revokeAccountCredentialsEvent",
+                "tools.ozone.moderation.defs#scheduleTakedownEvent",
+                "tools.ozone.moderation.defs#cancelScheduledTakedownEvent"
               ]
             },
             "subject": {
@@ -56,6 +62,15 @@
             "modTool": {
               "type": "ref",
               "ref": "tools.ozone.moderation.defs#modTool"
+            },
+            "externalId": {
+              "type": "string",
+              "description": "An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject."
+            },
+            "reportAction": {
+              "type": "ref",
+              "ref": "#reportAction",
+              "description": "Optional report-level targeting. If provided, this event will be linked to specific reports and reporters may be notified."
             }
           }
         }
@@ -70,8 +85,40 @@
       "errors": [
         {
           "name": "SubjectHasAction"
+        },
+        {
+          "name": "DuplicateExternalId",
+          "description": "An event with the same external ID already exists for the subject."
         }
       ]
+    },
+    "reportAction": {
+      "type": "object",
+      "description": "Target specific reports when emitting a moderation event",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Target specific report IDs"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Target reports matching these report types on the subject (fully qualified NSIDs)"
+        },
+        "all": {
+          "type": "boolean",
+          "description": "Target ALL reports on the subject"
+        },
+        "note": {
+          "type": "string",
+          "description": "Note to send to reporter(s) when actioning their report"
+        }
+      }
     }
   }
 }
