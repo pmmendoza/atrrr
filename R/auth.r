@@ -108,8 +108,6 @@ auth <- function(
   token$refreshJwt <- token$refreshJwt
   # it's not clear how long a token is valid. The docs say 'couple minutes'
   token$valid_until <- Sys.time() + 3 * 60
-  # TODO: should not be necessary, but refresh seems broken
-  token$password <- password
 
   class(token) <- "bsky_token"
 
@@ -171,8 +169,7 @@ get_token <- function() {
     token <- list(
       valid_until = Sys.time() + 10^7,
       accessJwt = "testing",
-      handle = "testing",
-      password = "testing"
+      handle = "testing"
     )
   } else {
     token <- auth()
@@ -180,7 +177,6 @@ get_token <- function() {
 
   if (token$valid_until < Sys.time()) {
     token <- auth(
-      password = token$password,
       token = token,
       verbose = FALSE,
       overwrite = TRUE
@@ -192,22 +188,14 @@ get_token <- function() {
 
 
 refresh_token <- function(token) {
-  # TODO: no clue why this doesn't work
-  # https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/server/refreshSession.json
-  # httr2::request("https://bsky.social/xrpc/com.atproto.server.refreshSession") |>
-  #   httr2::req_method("POST") |>
-  #   httr2::req_auth_bearer_token(token = token$accessJwt) |>
-  #   httr2::req_body_json(list(
-  #     accessJwt = token$accessJwt,
-  #     refreshJwt = token$refreshJwt,
-  #     handle = token$handle,
-  #     did = token$did
-  #   )) |>
-  #   httr2::req_error(body = error_parse) |>
-  #   httr2::req_perform() |>
-  #   httr2::resp_body_json()
   pds <- token$pds %||% "https://bsky.social"
-  new_tok <- req_token(token$handle, token$password, pds = pds)
+  new_tok <- httr2::request(pds) |>
+    httr2::req_url_path("/xrpc/com.atproto.server.refreshSession") |>
+    httr2::req_method("POST") |>
+    httr2::req_auth_bearer_token(token = token$refreshJwt) |>
+    httr2::req_error(body = error_parse) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json()
   new_tok$pds <- pds
   new_tok
 }
