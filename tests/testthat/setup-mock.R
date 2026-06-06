@@ -9,11 +9,12 @@ mocked_record <- function(req) {
     # when data is sent as URL parameters
     dat <- sub(endpoint, "", basename(req$url))
   }
-  # create unique file names from data
+  # create unique file names from data; use raw UTF-8 bytes rather than saveRDS
+  # because RDS binary format varies across R versions, causing hash mismatches
   data_hash <- local({
     tmp <- tempfile()
     on.exit(unlink(tmp))
-    saveRDS(dat, tmp, compress = FALSE)
+    writeBin(charToRaw(paste(dat, collapse = "\n")), tmp)
     unname(tools::md5sum(tmp))
   }) |>
     substr(1, 5) # check complains about long file names
