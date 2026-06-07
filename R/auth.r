@@ -5,7 +5,7 @@
 #'
 #' @param user Your user handle (e.g, benguinaudeau.bsky.social).
 #' @param password Your app password (usually created on
-#'   <https://bsky.app/settings/app-passwords>).
+#'   https://bsky.app/settings/app-passwords).
 #' @param domain For now https://bsky.app/, but could change in the future.
 #' @param overwrite If TRUE, overwrites old token without asking for
 #'   confirmation.
@@ -48,13 +48,14 @@
 #' }
 #'
 #' @export
-auth <- function(user,
-                 password,
-                 domain = "https://bsky.app/",
-                 verbose = TRUE,
-                 overwrite = FALSE,
-                 token = NULL) {
-
+auth <- function(
+  user,
+  password,
+  domain = "https://bsky.app/",
+  verbose = TRUE,
+  overwrite = FALSE,
+  token = NULL
+) {
   if (is.null(token)) {
     url <- list(
       scheme = "https",
@@ -71,9 +72,13 @@ auth <- function(user,
       )
     }
 
-    if(missing(password) || is.null(password)) {
+    if (missing(password) || is.null(password)) {
       if (interactive()) {
-        if (verbosity(verbose)) cli::cli_alert_info("Navigate to {.url {url}} and create a new app password")
+        if (verbosity(verbose)) {
+          cli::cli_alert_info(
+            "Navigate to {.url {url}} and create a new app password"
+          )
+        }
         utils::browseURL(url)
         password <- askpass::askpass("Please enter your app password")
       } else {
@@ -82,7 +87,12 @@ auth <- function(user,
     }
 
     if (!is.null(user) && !is.null(password)) {
-      token <- req_token(user, password)
+      pds <- tryCatch(
+        resolve_pds(user),
+        error = function(e) "https://bsky.social"
+      )
+      token <- req_token(user, password, pds = pds)
+      token$pds <- pds
     } else {
       cli::cli_abort("You need to supply username and password.")
     }
@@ -96,10 +106,7 @@ auth <- function(user,
   token$domain <- domain
   token$accessJwt <- token$accessJwt
   token$refreshJwt <- token$refreshJwt
-  # it's not clear how long a token is valid. The docs say 'couple minutes'
-  token$valid_until <- Sys.time() + 3 * 60
-  # TODO: should not be necessary, but refresh seems broken
-  token$password <- password
+  token$valid_until <- Sys.time() + 2 * 60 * 60
 
   class(token) <- "bsky_token"
 
@@ -120,18 +127,22 @@ auth <- function(user,
 
   if (isTRUE(sel)) {
     httr2::secret_write_rds(
-      x = token, path = file.path(p, f),
+      x = token,
+      path = file.path(p, f),
       key = I(rlang::hash("musksucks"))
     )
-    if (verbosity(verbose)) cli::cli_alert_success("Succesfully authenticated!")
+    if (verbosity(verbose)) {
+      cli::cli_alert_success("Succesfully authenticated!")
+    }
     invisible(token)
   }
 }
 
 
-req_token <- function(user, password) {
+req_token <- function(user, password, pds = "https://bsky.social") {
   # https://atproto.com/specs/xrpc#authentication
-  httr2::request("https://bsky.social/xrpc/com.atproto.server.createSession") |>
+  httr2::request(pds) |>
+    httr2::req_url_path("/xrpc/com.atproto.server.createSession") |>
     httr2::req_method("POST") |>
     httr2::req_body_json(list(
       identifier = user,
@@ -155,17 +166,20 @@ get_token <- function() {
     token <- read_token(f)
   } else if (!is.null(getOption("httr2_mock", NULL))) {
     token <- list(
-      valid_until = Sys.time() + 10 ^ 7,
+      valid_until = Sys.time() + 10^7,
       accessJwt = "testing",
-      handle = "testing",
-      password = "testing"
+      handle = "testing"
     )
   } else {
     token <- auth()
   }
 
   if (token$valid_until < Sys.time()) {
-    token <- auth(password = token$password, token = token, verbose = FALSE, overwrite = TRUE)
+    token <- auth(
+      token = token,
+      verbose = FALSE,
+      overwrite = TRUE
+    )
   }
 
   invisible(token)
@@ -173,21 +187,31 @@ get_token <- function() {
 
 
 refresh_token <- function(token) {
-  # TODO: no clue why this doesn't work
-  # https://github.com/bluesky-social/atproto/blob/main/lexicons/com/atproto/server/refreshSession.json
-  # httr2::request("https://bsky.social/xrpc/com.atproto.server.refreshSession") |>
-  #   httr2::req_method("POST") |>
-  #   httr2::req_auth_bearer_token(token = token$accessJwt) |>
-  #   httr2::req_body_json(list(
-  #     accessJwt = token$accessJwt,
-  #     refreshJwt = token$refreshJwt,
-  #     handle = token$handle,
-  #     did = token$did
-  #   )) |>
-  #   httr2::req_error(body = error_parse) |>
-  #   httr2::req_perform() |>
-  #   httr2::resp_body_json()
-  req_token(token$handle, token$password)
+  pds <- token$pds %||% "https://bsky.social"
+  new_tok <- httr2::request(pds) |>
+    httr2::req_url_path("/xrpc/com.atproto.server.refreshSession") |>
+    httr2::req_method("POST") |>
+    httr2::req_auth_bearer_token(token = token$refreshJwt) |>
+    httr2::req_error(
+      is_error = function(resp) {
+        httr2::resp_status(resp) >= 400 &
+          !grepl(
+            "Token has been revoked",
+            httr2::resp_body_string(resp),
+            fixed = TRUE
+          )
+      },
+      body = error_parse
+    ) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json()
+
+  if (purrr::pluck_exists(new_tok, "error")) {
+    new_tok <- req_token(token$handle, token$password, pds = pds)
+  }
+
+  new_tok$pds <- pds
+  new_tok
 }
 
 
@@ -202,14 +226,25 @@ refresh_token <- function(token) {
 #' @export
 print.bsky_token <- function(x, ...) {
   cli::cli_h1("Blue Sky token")
-  cli::cat_bullet(glue::glue("User: {x$handle}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("User: {x$handle}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
-  cli::cat_bullet(glue::glue("Domain: {x$domain}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("PDS: {x$pds %||% 'https://bsky.social'}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
-  cli::cat_bullet(glue::glue("Valid until: {x$valid_until}"),
-                  background_col = "#0560FF", col = "#F3F9FF"
+  cli::cat_bullet(
+    glue::glue("Domain: {x$domain}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
+  )
+  cli::cat_bullet(
+    glue::glue("Valid until: {x$valid_until}"),
+    background_col = "#0560FF",
+    col = "#F3F9FF"
   )
 }
 

@@ -11,29 +11,34 @@
 #' \dontrun{
 #' andrews_posts <- get_skeets_authored_by("andrew.heiss.phd")
 #' }
-get_skeets_authored_by <- function(actor,
-                                   limit = 25L,
-                                   filter = NULL,
-                                   cursor = NULL,
-                                   parse = TRUE,
-                                   verbose = NULL,
-                                   .token = NULL) {
-
+get_skeets_authored_by <- function(
+  actor,
+  limit = 25L,
+  filter = NULL,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
-  allowed_values <- c("posts_with_replies",
-                      "posts_no_replies",
-                      "posts_with_media",
-                      "posts_and_author_threads")
+  allowed_values <- c(
+    "posts_with_replies",
+    "posts_no_replies",
+    "posts_with_media",
+    "posts_and_author_threads"
+  )
   if (!filter %in% allowed_values && !is.null(filter)) {
     cli::cli_abort("{.code filter} must be one of {.val {allowed_values}}")
   }
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -45,22 +50,31 @@ get_skeets_authored_by <- function(actor,
         filter = filter,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_feed(res)
     out$is_reskeet <- out$author_handle != actor
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -81,21 +95,24 @@ get_skeets_authored_by <- function(actor,
 #' \dontrun{
 #' feed <- get_feeds_created_by("andrew.heiss.phd")
 #' }
-get_feeds_created_by <- function(actor,
-                                 limit = 25L,
-                                 cursor = NULL,
-                                 parse = TRUE,
-                                 verbose = NULL,
-                                 .token = NULL) {
-
+get_feeds_created_by <- function(
+  actor,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} feeds, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} feeds, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -106,23 +123,32 @@ get_feeds_created_by <- function(actor,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
 
     out <- parse_feeds_list(res)
 
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -150,21 +176,24 @@ get_feeds_created_by <- function(actor,
 #' res <- search_feed("#rstats")
 #' get_feed(res$uri[1])
 #' }
-get_feed <- function(feed_url,
-                     limit = 25L,
-                     cursor = NULL,
-                     parse = TRUE,
-                     verbose = NULL,
-                     .token = NULL) {
-
+get_feed <- function(
+  feed_url,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   feed_url <- convert_http_to_at(feed_url, .token = .token)
 
@@ -177,21 +206,30 @@ get_feed <- function(feed_url,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_feed(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -213,21 +251,24 @@ get_feed <- function(feed_url,
 #' \dontrun{
 #' search_feed("rstats")
 #' }
-search_feed <- function(query,
-                        limit = 25L,
-                        cursor = NULL,
-                        parse = TRUE,
-                        verbose = NULL,
-                        .token = NULL) {
-
+search_feed <- function(
+  query,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -238,21 +279,30 @@ search_feed <- function(query,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_feeds_list(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -276,21 +326,24 @@ search_feed <- function(query,
 #' get_own_timeline()
 #' get_own_timeline(algorithm = "reverse-chronological")
 #' }
-get_own_timeline <- function(algorithm = NULL,
-                             limit = 25L,
-                             cursor = NULL,
-                             parse = TRUE,
-                             verbose = NULL,
-                             .token = NULL) {
-
+get_own_timeline <- function(
+  algorithm = NULL,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} skeets, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -301,21 +354,30 @@ get_own_timeline <- function(algorithm = NULL,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_timeline(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -338,23 +400,26 @@ get_own_timeline <- function(algorithm = NULL,
 #' get_likes("https://bsky.app/profile/jbgruber.bsky.social/post/3kbi55xm6u62v")
 #' get_reposts("https://bsky.app/profile/jbgruber.bsky.social/post/3kbi55xm6u62v")
 #' }
-get_likes <- function(post_url,
-                      limit = 25L,
-                      cursor = NULL,
-                      parse = TRUE,
-                      verbose = NULL,
-                      .token = NULL) {
-
+get_likes <- function(
+  post_url,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   uri <- convert_http_to_at(post_url, .token = .token)
 
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -366,23 +431,32 @@ get_likes <- function(post_url,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$likes)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
 
     out <- parse_likes(res)
 
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -404,21 +478,24 @@ get_likes <- function(post_url,
 #' \dontrun{
 #' get_actor_likes("jbgruber.bsky.social")
 #' }
-get_actor_likes <- function(actor,
-                            limit = 25L,
-                            cursor = NULL,
-                            parse = TRUE,
-                            verbose = NULL,
-                            .token = NULL) {
-
+get_actor_likes <- function(
+  actor,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -429,21 +506,30 @@ get_actor_likes <- function(actor,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$feed)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_timeline(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -454,23 +540,26 @@ get_actor_likes <- function(actor,
 
 #' @rdname get_likes
 #' @export
-get_reposts <- function(post_url,
-                        limit = 25L,
-                        cursor = NULL,
-                        parse = TRUE,
-                        verbose = NULL,
-                        .token = NULL) {
-
+get_reposts <- function(
+  post_url,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   uri <- convert_http_to_at(post_url, .token = .token)
 
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} reposts, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} reposts. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} reposts, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} reposts. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -482,24 +571,32 @@ get_reposts <- function(post_url,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$repostedBy)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
 
     out <- parse_actors(res)
 
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
-
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -525,23 +622,26 @@ get_reposts <- function(post_url,
 #' get_feed_likes(res$uri[1])
 #' }
 #' @export
-get_feed_likes <- function(feed_url,
-                           limit = 25L,
-                           cursor = NULL,
-                           parse = TRUE,
-                           verbose = NULL,
-                           .token = NULL) {
-
+get_feed_likes <- function(
+  feed_url,
+  limit = 25L,
+  cursor = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   uri <- convert_http_to_at(feed_url, .token = .token)
 
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} like entries, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Got {length(res)} records. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -553,21 +653,30 @@ get_feed_likes <- function(feed_url,
         cursor = last_cursor,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
     last_cursor <- resp$cursor
     res <- c(res, resp$likes)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
     out <- parse_likes(res)
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -592,17 +701,23 @@ get_feed_likes <- function(feed_url,
 #' \dontrun{
 #' get_thread("https://bsky.app/profile/jbgruber.bsky.social/post/3kbi57u4sys2l")
 #' }
-get_thread <- function(post_url,
-                       .token = NULL) {
-
+get_thread <- function(post_url, parse = TRUE, .token = NULL) {
   post_uri <- convert_http_to_at(post_url, .token = .token)
-  root <- do.call(app_bsky_feed_get_post_thread, list(post_uri, .token = .token)) |>
+  root <- do.call(
+    app_bsky_feed_get_post_thread,
+    list(post_uri, .token = .token)
+  ) |>
     get_thread_root()
-  thread <- do.call(app_bsky_feed_get_post_thread,
-                    list(purrr::pluck(root, "post", "uri"), .token = .token))
+  thread <- do.call(
+    app_bsky_feed_get_post_thread,
+    list(purrr::pluck(root, "post", "uri"), .token = .token)
+  )
 
-  return(parse_threads(thread))
-
+  if (parse) {
+    return(parse_threads(thread))
+  } else {
+    thread
+  }
 }
 
 
@@ -620,13 +735,13 @@ get_thread <- function(post_url,
 #' \dontrun{
 #' get_replies("https://bsky.app/profile/jbgruber.bsky.social/post/3kbi57u4sys2l")
 #' }
-get_replies <- function(post_url,
-                        .token = NULL) {
-
+get_replies <- function(post_url, .token = NULL) {
   post_uri <- convert_http_to_at(post_url, .token = .token)
-  replies <- do.call(app_bsky_feed_get_post_thread, list(post_uri, .token = .token))
+  replies <- do.call(
+    app_bsky_feed_get_post_thread,
+    list(post_uri, .token = .token)
+  )
   return(parse_threads(replies))
-
 }
 
 
@@ -646,9 +761,14 @@ get_replies <- function(post_url,
 #'   facets.
 #' @param link instead of adding a link in text (gets parsed automatically),
 #'   it's also possible to add a link directly (and save some characters).
-#' @param preview_card display a preview card for links included in the `text`
-#'   or `link` (if images or videos are included, they take precedence).
+#' @param preview_card logical. Display a preview card for links included in the
+#'   `text` or `link` (if images or videos are included, they take precedence).
+#'   alternatively, fetch a card with [fetch_preview()] and supply the object
+#'   here.
 #' @param post_url URL or URI of post to delete.
+#' @param .reply a pre-built reply list with `root` and `parent` elements (each
+#'   containing `uri` and `cid`). Used for [post_thread()] not really important
+#'   for users.
 #' @inheritParams search_user
 #'
 #' @returns list of the URI and CID of the post (invisible)
@@ -658,21 +778,23 @@ get_replies <- function(post_url,
 #' \dontrun{
 #' post("Hello from #rstats with {atrrr}")
 #' }
-post <- function(text,
-                 in_reply_to = NULL,
-                 quote = NULL,
-                 image = NULL,
-                 image_alt = NULL,
-                 video = NULL,
-                 link = NULL,
-                 created_at = Sys.time(),
-                 labels = NULL,
-                 langs = NULL,
-                 tags = NULL,
-                 preview_card = TRUE,
-                 verbose = NULL,
-                 .token = NULL) {
-
+post <- function(
+  text,
+  in_reply_to = NULL,
+  quote = NULL,
+  image = NULL,
+  image_alt = NULL,
+  video = NULL,
+  link = NULL,
+  created_at = Sys.time(),
+  labels = NULL,
+  langs = NULL,
+  tags = NULL,
+  preview_card = TRUE,
+  verbose = NULL,
+  .token = NULL,
+  .reply = NULL
+) {
   cli::cli_progress_step(
     msg = "Request to post {.emph {text}}",
     msg_done = "Posted {.emph {text}}",
@@ -685,23 +807,34 @@ post <- function(text,
   record <- list(
     "$type" = "app.bsky.feed.post",
     "text" = text,
-    "createdAt" = format(as.POSIXct(created_at, tz = "UTC"), "%Y-%m-%dT%H:%M:%OS6Z"),
+    "createdAt" = format(
+      as.POSIXct(created_at, tz = "UTC"),
+      "%Y-%m-%dT%H:%M:%OS6Z"
+    ),
     langs = as.list(langs),
     tags = as.list(tags)
   )
 
   record$labels <- list(
     "$type" = "com.atproto.label.defs#selfLabels",
-    values = lapply(labels, function(l)
-      list("$type" = "com.atproto.label.defs#selfLabel", val = l))
+    values = lapply(labels, function(l) {
+      list("$type" = "com.atproto.label.defs#selfLabel", val = l)
+    })
   )
 
-  if (!is.null(in_reply_to)) {
-    in_reply_to <- ifelse(grepl("^http", in_reply_to),
-                          convert_http_to_at(in_reply_to, .token = .token),
-                          in_reply_to)
+  if (!is.null(.reply)) {
+    record[["reply"]] <- .reply
+  } else if (!is.null(in_reply_to)) {
+    in_reply_to <- ifelse(
+      grepl("^http", in_reply_to),
+      convert_http_to_at(in_reply_to, .token = .token),
+      in_reply_to
+    )
 
-    thread <- do.call(app_bsky_feed_get_post_thread, list(in_reply_to, .token = .token))
+    thread <- do.call(
+      app_bsky_feed_get_post_thread,
+      list(in_reply_to, .token = .token)
+    )
     thread_root <- get_thread_root(thread)
     record[["reply"]] <- list(
       root = list(
@@ -715,26 +848,6 @@ post <- function(text,
     )
   }
 
-  # quote <- "https://bsky.app/profile/favstats.eu/post/3kc57mkoi6a2k"
-  if (!is.null(quote)) {
-    quote <- ifelse(grepl("^http", quote),
-                    convert_http_to_at(quote, .token = .token),
-                    quote)
-
-    quote_post <- do.call(app_bsky_feed_get_posts, list(quote, .token = .token))
-
-
-    # thread <- do.call(app_bsky_feed_get_post_thread, list(quote, .token = .token))
-    # thread_root <- get_thread_root(thread)
-    record[["embed"]] <- list(
-      "$type" = "app.bsky.embed.record",
-      "record" = list(
-        "uri" = quote_post$posts[[1]]$uri,
-        "cid" = quote_post$posts[[1]]$cid
-      )
-    )
-  }
-
   if (!is.null(image) && !identical(image, "")) {
     image <- purrr::map_chr(image, from_ggplot)
     rlang::check_installed("magick")
@@ -742,9 +855,11 @@ post <- function(text,
     images <- purrr::map2(image, image_alt, function(i, alt) {
       ar <- magick::image_info(magick::image_read(i))
       blob <- com_atproto_repo_upload_blob2(i, .token = .token)
-      list(alt = alt,
-           image = blob[["blob"]],
-           aspectRatio = list(height = ar$height, width = ar$width))
+      list(
+        alt = alt,
+        image = blob[["blob"]],
+        aspectRatio = list(height = ar$height, width = ar$width)
+      )
     })
     record[["embed"]] <- list(
       "$type" = "app.bsky.embed.images",
@@ -787,18 +902,51 @@ post <- function(text,
 
   # link is only added when no image or video exist, but takes precedence over
   # links in text
-  if (!is.null(link) && !purrr::pluck_exists(record, "embed") && preview_card) {
+  if (
+    !is.null(link) &&
+      !purrr::pluck_exists(record, "embed") &&
+      isTRUE(preview_card)
+  ) {
     record$embed <- fetch_preview(link)
     record$embed <- normalize_external_embed_uri(record$embed, link)
+  } else if (is.list(preview_card) && !purrr::pluck_exists(record, "embed")) {
+    record$embed <- preview_card
+  }
+
+  if (!is.null(quote)) {
+    quote <- ifelse(
+      grepl("^http", quote),
+      convert_http_to_at(quote, .token = .token),
+      quote
+    )
+
+    quote_post <- do.call(app_bsky_feed_get_posts, list(quote, .token = .token))
+    embed_record <- list(
+      "$type" = "app.bsky.embed.record",
+      "record" = list(
+        "uri" = quote_post$posts[[1]]$uri,
+        "cid" = quote_post$posts[[1]]$cid
+      )
+    )
+    if (purrr::pluck_exists(record, "embed")) {
+      record[["embed"]] <- list(
+        "$type" = "app.bsky.embed.recordWithMedia",
+        "record" = embed_record,
+        "media" = record[["embed"]]
+      )
+    } else {
+      record[["embed"]] <- embed_record
+    }
   }
 
   # https://atproto.com/blog/create-post#mentions-and-links
   parsed_richtext <- parse_facets(text)
   if (!any(is.na(unlist(parsed_richtext)))) {
     record[["facets"]] <- parsed_richtext
-    if (!purrr::pluck_exists(record, "embed") && preview_card) {
-      uri <- purrr::map_chr(parsed_richtext, function(f)
-        purrr::pluck(f, "features", 1, "uri", .default = NA_character_)) |>
+    if (!purrr::pluck_exists(record, "embed") && isTRUE(preview_card)) {
+      uri <- purrr::map_chr(parsed_richtext, function(f) {
+        purrr::pluck(f, "features", 1, "uri", .default = NA_character_)
+      }) |>
         stats::na.omit() |>
         utils::head(1L) # only one link can be previewed
 
@@ -810,9 +958,10 @@ post <- function(text,
     }
   }
 
-  invisible(do.call(what = com_atproto_repo_create_record,
-                    args = list(repo, collection, record, .token = .token)))
-
+  invisible(do.call(
+    what = com_atproto_repo_create_record,
+    args = list(repo, collection, record, .token = .token)
+  ))
 }
 
 
@@ -821,23 +970,164 @@ post <- function(text,
 post_skeet <- post
 
 
-#' @rdname post
+#' Fetch link preview
+#'
+#' @param uri URL or URI to fetch preview for.
+#'
+#' @returns list strutured for use as preview_card
 #' @export
-delete_skeet <- function(post_url,
-                         verbose = NULL,
-                         .token = NULL) {
+#'
+#' @examples
+#' \dontrun{
+#' wiki_preview <- fetch_preview("https://en.wikipedia.org/wiki/AT_Protocol")
+#' post_skeet("Do you know the AT Protocol?", preview_card = wiki_preview)
+#' }
+fetch_preview <- function(uri) {
+  clean_text <- function(x) {
+    if (is.null(x) || length(x) == 0 || isTRUE(is.na(x))) return("")
+    stringr::str_squish(as.character(x))
+  }
 
-  id <- basename(post_url)
-  if (verbosity(verbose)) cli::cli_progress_step(
-    msg = "Request to delete post {.emph {id}}",
-    msg_done = "Deleted {.emph {id}}",
-    msg_failed = "Something went wrong"
+  first_non_empty <- function(...) {
+    vals <- list(...)
+    for (v in vals) {
+      val <- clean_text(v)
+      if (val != "") return(val)
+    }
+    ""
+  }
+
+  is_valid_http_uri <- function(x) {
+    x <- clean_text(x)
+    if (x == "") return(FALSE)
+    parsed <- tryCatch(httr2::url_parse(x), error = function(...) NULL)
+    if (is.null(parsed)) return(FALSE)
+    scheme <- tolower(parsed$scheme %||% "")
+    host <- parsed$hostname %||% ""
+    scheme %in% c("http", "https") && host != ""
+  }
+
+  extract_meta_content <- function(html, attr, key) {
+    pattern_a <- glue::glue(
+      "(?is)<meta[^>]+{attr}=[\"']{key}[\"'][^>]+content=[\"']([^\"']*)[\"'][^>]*>"
+    )
+    pattern_b <- glue::glue(
+      "(?is)<meta[^>]+content=[\"']([^\"']*)[\"'][^>]+{attr}=[\"']{key}[\"'][^>]*>"
+    )
+    first_non_empty(
+      stringr::str_match(html, pattern_a)[, 2],
+      stringr::str_match(html, pattern_b)[, 2]
+    )
+  }
+
+  extract_source_meta <- function(url) {
+    resp <- tryCatch(
+      httr2::request(url) |>
+        httr2::req_timeout(15) |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
+        httr2::req_perform(),
+      error = function(...) NULL
+    )
+    if (is.null(resp) || httr2::resp_status(resp) >= 400L) {
+      return(list(title = "", description = "", image = ""))
+    }
+
+    html <- tryCatch(
+      httr2::resp_body_string(resp),
+      error = function(...) ""
+    )
+    if (clean_text(html) == "") {
+      return(list(title = "", description = "", image = ""))
+    }
+
+    list(
+      title = first_non_empty(
+        extract_meta_content(html, "property", "og:title"),
+        extract_meta_content(html, "name", "twitter:title"),
+        stringr::str_match(html, "(?is)<title[^>]*>(.*?)</title>")[, 2]
+      ),
+      description = first_non_empty(
+        extract_meta_content(html, "property", "og:description"),
+        extract_meta_content(html, "name", "twitter:description"),
+        extract_meta_content(html, "name", "description")
+      ),
+      image = first_non_empty(
+        extract_meta_content(html, "property", "og:image"),
+        extract_meta_content(html, "name", "twitter:image")
+      )
+    )
+  }
+
+  preview <- list()
+  for (attempt in 1:3) {
+    resp <- tryCatch(
+      httr2::request("https://cardyb.bsky.app/v1/extract") |>
+        httr2::req_url_query(url = uri) |>
+        httr2::req_timeout(15) |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
+        httr2::req_perform(),
+      error = function(...) NULL
+    )
+
+    if (!is.null(resp) && httr2::resp_status(resp) < 400L) {
+      preview <- tryCatch(
+        httr2::resp_body_json(resp, check_type = FALSE),
+        error = function(...) list()
+      )
+      break
+    }
+    if (attempt < 3) Sys.sleep(2 ^ (attempt - 1))
+  }
+
+  source_meta <- list(title = "", description = "", image = "")
+  preview_title <- clean_text(preview$title)
+  preview_description <- clean_text(preview$description)
+  if (preview_title == "" || preview_description == "") {
+    source_meta <- extract_source_meta(uri)
+  }
+
+  embed <- list(
+    `$type` = "app.bsky.embed.external",
+    external = list(
+      uri = if (is_valid_http_uri(preview$url)) clean_text(preview$url) else uri,
+      title = first_non_empty(preview_title, source_meta$title),
+      description = first_non_empty(preview_description, source_meta$description)
+    )
   )
 
+  image_url <- first_non_empty(preview$image, source_meta$image)
+  if (image_url != "") {
+    thumb <- tryCatch(
+      com_atproto_repo_upload_blob2(image_url)$blob,
+      error = function(...) NULL
+    )
+    if (!is.null(thumb)) {
+      embed$external$thumb <- thumb
+    }
+  }
+
+  return(embed)
+}
+
+
+#' @rdname post
+#' @export
+delete_skeet <- function(post_url, verbose = NULL, .token = NULL) {
+  id <- basename(post_url)
+  if (verbosity(verbose)) {
+    cli::cli_progress_step(
+      msg = "Request to delete post {.emph {id}}",
+      msg_done = "Deleted {.emph {id}}",
+      msg_failed = "Something went wrong"
+    )
+  }
+
   invisible(purrr::map(post_url, function(u) {
-    post_info <- ifelse(grepl("^http", u),
-                        convert_http_to_at(u, .token = .token),
-                        u) |>
+    post_info <- ifelse(
+      grepl("^http", u),
+      convert_http_to_at(u, .token = .token),
+      u
+    ) |>
       parse_at_uri()
 
     do.call(
@@ -848,9 +1138,9 @@ delete_skeet <- function(post_url,
         rkey = post_info$rkey,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
   }))
-
 }
 
 
@@ -865,7 +1155,7 @@ delete_post <- delete_skeet
 #' @param images paths to images to be included in each post. This may be a character vector, or a list of character vectors if multiple images per post are required.
 #' @param image_alts alt texts for the images to be included in each post. If images is a list of character vectors, this should also be a list of character vectors and have the same shape.
 #' @param thread_df instead of defining texts, images and image_alts, you can
-#'   also create a data frame with the information in columns of the same names.
+#'   also create a data frame with the information in columns `text`, `image`, and `image_alt`.
 #' @inheritParams search_user
 #'
 #' @return list of the URIs and CIDs of the posts (invisible)
@@ -879,18 +1169,21 @@ delete_post <- delete_skeet
 #' # delete the thread
 #' delete_post(thread$uri)
 #' }
-post_thread <- function(texts,
-                        images = NULL,
-                        image_alts = NULL,
-                        thread_df = NULL,
-                        verbose = NULL,
-                        .token = NULL) {
-
+post_thread <- function(
+  texts,
+  images = NULL,
+  image_alts = NULL,
+  thread_df = NULL,
+  verbose = NULL,
+  .token = NULL
+) {
   if (is.null(thread_df)) {
-    images <- images  %||% rep("", length(texts))
-    image_alts <- image_alts  %||% lapply(images, \(x)rep("",length(x)))
+    images <- images %||% rep("", length(texts))
+    image_alts <- image_alts %||% lapply(images, \(x) rep("", length(x)))
     if (length(unique(lengths(list(texts, images, image_alts)))) != 1L) {
-      cli::cli_abort("texts, images, image_alts must all have the same length or be NULL.")
+      cli::cli_abort(
+        "texts, images, image_alts must all have the same length or be NULL."
+      )
     }
 
     thread_df <- tibble::tibble(
@@ -900,19 +1193,35 @@ post_thread <- function(texts,
     )
   }
 
-  ref <- NULL
+  root_resp <- NULL
+  prev_resp <- NULL
   refs <- data.frame()
 
   for (i in seq_along(thread_df$text)) {
-    ref <- do.call(
+    reply_arg <- if (!is.null(root_resp)) {
+      list(
+        root = list(uri = root_resp$uri, cid = root_resp$cid),
+        parent = list(uri = prev_resp$uri, cid = prev_resp$cid)
+      )
+    }
+
+    resp <- do.call(
       what = post_skeet,
-      args = list(text = thread_df$text[[i]],
-                  image = thread_df$image[[i]],
-                  image_alt = thread_df$image_alt[[i]],
-                  in_reply_to = ref)
+      args = list(
+        text = thread_df$text[[i]],
+        image = thread_df$image[[i]],
+        image_alt = thread_df$image_alt[[i]],
+        .reply = reply_arg,
+        verbose = verbose,
+        .token = .token
+      )
     )
-    refs <- rbind(refs, as.data.frame(ref))
-    ref <- ref$uri
+
+    if (is.null(root_resp)) {
+      root_resp <- resp
+    }
+    prev_resp <- resp
+    refs <- rbind(refs, as.data.frame(resp))
   }
   return(refs)
 }
@@ -947,14 +1256,17 @@ post_thread <- function(texts,
 #' @details The [API
 #'   docs](https://docs.bsky.app/docs/api/app-bsky-feed-search-posts) claim that
 #'   Lucene query syntax is supported (Boolean operators and brackets for
-#'   complex queries). But only a small subset is [actually
-#'   implemented](https://github.com/bluesky-social/indigo/tree/main/cmd/palomar):
+#'   complex queries). But only a small subset is actually
+#'   implemented:
 #'
 #'   - Whitespace is treated as implicit AND, so all words in a query must occur,
 #'   but the word order and proximity are ignored.
 #'   - Double quotes indicate exact phrases.
 #'   - `from:<handle>` will filter to results from that account.
-#'   - `-` excludes terms (does not seem to be working at the moment).
+#'   - `-` excludes terms.
+#'   - `OR` and parentheses for grouping (e.g. `(rstats OR rstat) bluesky`) are
+#'   **not** supported and are treated literally (i.e. will only find posts
+#'   with parentheses and the word OR in it).
 #'
 #'   Note that matches can occur anywhere in the skeet, not just the text. For
 #'   example, a term can be in the link preview, or alt text of an image.
@@ -989,21 +1301,22 @@ post_thread <- function(texts,
 #'             tag = "rstats")
 #' }
 #' @export
-search_post <- function(q,
-                        limit = 100L,
-                        sort = NULL,
-                        since = NULL,
-                        until = NULL,
-                        mentions = NULL,
-                        author = NULL,
-                        lang = NULL,
-                        domain = NULL,
-                        url = NULL,
-                        tag = NULL,
-                        parse = TRUE,
-                        verbose = NULL,
-                        .token = NULL) {
-
+search_post <- function(
+  q,
+  limit = 100L,
+  sort = NULL,
+  since = NULL,
+  until = NULL,
+  mentions = NULL,
+  author = NULL,
+  lang = NULL,
+  domain = NULL,
+  url = NULL,
+  tag = NULL,
+  parse = TRUE,
+  verbose = NULL,
+  .token = NULL
+) {
   res <- list()
   req_limit <- ifelse(limit > 100, 100, limit)
   last_cursor <- NULL
@@ -1014,10 +1327,12 @@ search_post <- function(q,
     until <- as_iso_date(until)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_bar(
-    format = "{cli::pb_spin} Got {length(res)} posts, but there is more.. [{cli::pb_elapsed}]",
-    format_done = "Retrieved {length(res)} posts from {resp$hitsTotal} total hits. All done! [{cli::pb_elapsed}]"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_bar(
+      format = "{cli::pb_spin} Got {length(res)} posts, but there is more.. [{cli::pb_elapsed}]",
+      format_done = "Retrieved {length(res)} posts from {resp$hitsTotal} total hits. All done! [{cli::pb_elapsed}]"
+    )
+  }
 
   while (length(res) < limit) {
     resp <- do.call(
@@ -1037,28 +1352,39 @@ search_post <- function(q,
         tag = tag,
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
 
-    if (is.null(resp$hitsTotal))
+    if (is.null(resp$hitsTotal)) {
       resp$hitsTotal <- "an *unknown total* of"
-    if (is.null(last_cursor) && verbosity(verbose))
+    }
+    if (is.null(last_cursor) && verbosity(verbose)) {
       cli::cli_alert_info("Found {resp$hitsTotal} posts that fit the query")
+    }
 
     last_cursor <- resp$cursor
     res <- c(res, resp$posts)
 
-    if (is.null(resp$cursor)) break
+    if (is.null(resp$cursor)) {
+      break
+    }
     if (verbosity(verbose)) cli::cli_progress_update(force = TRUE)
   }
 
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
 
   if (parse) {
-    if (verbosity(verbose)) cli::cli_progress_step("Parsing {length(res)} results.")
+    if (verbosity(verbose)) {
+      cli::cli_progress_step("Parsing {length(res)} results.")
+    }
 
     out <- parse_post_list(res)
 
-    if (verbosity(verbose)) cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    if (verbosity(verbose)) {
+      cli::cli_process_done(msg_done = "Got {nrow(out)} results. All done!")
+    }
   } else {
     out <- res
   }
@@ -1088,21 +1414,22 @@ search_skeet <- search_post
 #' johannes_posts <- get_skeets_authored_by("jbgruber.bsky.social")
 #' like_skeet(johannes_posts$uri)
 #' }
-like_skeet <- function(post_url,
-                       verbose = NULL,
-                       .token = NULL) {
-
+like_skeet <- function(post_url, verbose = NULL, .token = NULL) {
   id <- basename(post_url)
-  if (verbosity(verbose)) cli::cli_progress_step(
-    msg = "Request to like post {.emph {id}}",
-    msg_done = "Liked {.emph {id}}",
-    msg_failed = "Something went wrong"
-  )
+  if (verbosity(verbose)) {
+    cli::cli_progress_step(
+      msg = "Request to like post {.emph {id}}",
+      msg_done = "Liked {.emph {id}}",
+      msg_failed = "Something went wrong"
+    )
+  }
 
   invisible(purrr::map(post_url, function(u) {
     uri <- convert_http_to_at(u, .token = .token)
-    post_info <- do.call(app_bsky_feed_get_posts,
-              args = list(uris = uri, .token = .token)) |>
+    post_info <- do.call(
+      app_bsky_feed_get_posts,
+      args = list(uris = uri, .token = .token)
+    ) |>
       purrr::pluck("posts", 1L)
 
     do.call(
@@ -1120,7 +1447,8 @@ like_skeet <- function(post_url,
         ),
         .token = .token,
         .return = "json"
-      ))
+      )
+    )
   }))
 }
 

@@ -17,7 +17,8 @@
 #' @returns nothing itself, used to run `fun`
 #' @export
 #'
-#' @examplesIf rlang::is_installed("libipldr")
+#' @examples
+#' \dontrun{
 #' # an example function that saves events as RDS files
 #' stream2rds <- function(events) {
 #'   for (event in events) {
@@ -57,14 +58,11 @@
 #'   }
 #' }
 #' stream_firehose(print_stream, timeout = 15)
+#' }
 stream_firehose <- function(fun, timeout = 30) {
   rlang::check_installed(
     pkg = "libipldr",
-    reason = "to access the Bluesky Firehose",
-    action = function(pkg, ...) {
-      rlang::check_installed("remotes")
-      remotes::install_github("JBGruber/libipldr", ...)
-    }
+    reason = "to access the Bluesky Firehose"
   )
 
   conn <- curl::curl("wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos")

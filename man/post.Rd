@@ -21,7 +21,8 @@ post(
   tags = NULL,
   preview_card = TRUE,
   verbose = NULL,
-  .token = NULL
+  .token = NULL,
+  .reply = NULL
 )
 
 post_skeet(
@@ -38,7 +39,8 @@ post_skeet(
   tags = NULL,
   preview_card = TRUE,
   verbose = NULL,
-  .token = NULL
+  .token = NULL,
+  .reply = NULL
 )
 
 delete_skeet(post_url, verbose = NULL, .token = NULL)
@@ -70,17 +72,23 @@ content.}
 \item{tags}{additional hashtags, in addition to any included in post text and
 facets.}
 
-\item{preview_card}{display a preview card for links included in the \code{text}
-or \code{link} (if images or videos are included, they take precedence).}
+\item{preview_card}{logical. Display a preview card for links included in the
+\code{text} or \code{link} (if images or videos are included, they take precedence).
+alternatively, fetch a card with \code{\link[=fetch_preview]{fetch_preview()}} and supply the object
+here.}
 
 \item{verbose}{Whether to print status messages to the Console
 (\code{TRUE}/\code{FALSE}). Package default (when \code{NULL}) is to have
 status messages. Can be changed with \code{Sys.setenv(ATR_VERBOSE =
-  FALSE)}.}
+FALSE)}.}
 
 \item{.token}{If you manage your own tokens, you can supply it here. Usually
 \code{NULL} is OK and will automatically load or guide you to generate a
 token.}
+
+\item{.reply}{a pre-built reply list with \code{root} and \code{parent} elements (each
+containing \code{uri} and \code{cid}). Used for \code{\link[=post_thread]{post_thread()}} not really important
+for users.}
 
 \item{post_url}{URL or URI of post to delete.}
 }

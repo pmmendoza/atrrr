@@ -5,15 +5,23 @@ mocked_record <- function(req) {
   # to identify requests, we use a combination of endpoint and request data
   endpoint <- sub("\\?.*", "", basename(req$url))
   dat <- req$body$data
-  if (is.null(dat)) { # when data is sent as URL parameters
+  if (is.null(dat)) {
+    # when data is sent as URL parameters
     dat <- sub(endpoint, "", basename(req$url))
   }
-  data_hash <- rlang::hash(dat) |>
+  # create unique file names from data; use raw UTF-8 bytes rather than saveRDS
+  # because RDS binary format varies across R versions, causing hash mismatches
+  data_hash <- local({
+    tmp <- tempfile()
+    on.exit(unlink(tmp))
+    writeBin(charToRaw(paste(dat, collapse = "\n")), tmp)
+    unname(tools::md5sum(tmp))
+  }) |>
     substr(1, 5) # check complains about long file names
-  f <- file.path("recorded_responses", paste0(endpoint,
-                        "_", data_hash, ".rds"))
+  f <- file.path("recorded_responses", paste0(endpoint, "_", data_hash, ".rds"))
 
-  if (endpoint == "com.atproto.server.createSession") { # needs password
+  if (endpoint == "com.atproto.server.createSession") {
+    # needs password
     resp <- httr2::response(
       status_code = 200,
       method = "POST",

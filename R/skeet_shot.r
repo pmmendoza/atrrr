@@ -14,10 +14,7 @@
 #' df <- atrrr::search_post("rstats")
 #' skeet_shot(df$uri[1:2])
 #' }
-skeet_shot <- function(x,
-                       file = NULL,
-                       delay = 1,
-                       ...) {
+skeet_shot <- function(x, file = NULL, delay = 1, ...) {
   rlang::check_installed("chromote")
   out <- purrr::map_chr(x, function(x2) {
     if (is_at(x2)) {
@@ -52,4 +49,3 @@ skeet_shot <- function(x,
   })
   invisible(out)
 }
-

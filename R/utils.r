@@ -4,7 +4,9 @@ the <- new.env()
 inside_pkg <- function() {
   d <- basename(getwd()) == "atrrr"
   p <- 0
-  if (d) p <- any(grepl("Package: atrrr", readLines("DESCRIPTION")))
+  if (d) {
+    p <- any(grepl("Package: atrrr", readLines("DESCRIPTION")))
+  }
   d + p == 2L
 }
 
@@ -28,17 +30,24 @@ f_name <- function(id) {
 flatten_query_params <- function(arg_calls) {
   arg_calls |>
     purrr::compact() |>
-    purrr::imap(~ {
-      .x <- eval(.x)
-      names(.x) <- rep(.y, length(.x))
-      .x
-    }) |>
+    purrr::imap(
+      ~ {
+        .x <- eval(.x)
+        names(.x) <- rep(.y, length(.x))
+        .x
+      }
+    ) |>
     unname() |>
     unlist()
 }
 
 
-make_request <- function(name, params, req_method = c("GET", "POST"), chat = FALSE) {
+make_request <- function(
+  name,
+  params,
+  req_method = c("GET", "POST"),
+  chat = FALSE
+) {
   req_method <- match.arg(req_method)
 
   .token <- params[[".token"]] %||% get_token()
@@ -56,6 +65,9 @@ make_request <- function(name, params, req_method = c("GET", "POST"), chat = FAL
     req <- httr2::request(sess_url) |>
       httr2::req_url_path(name) |>
       httr2::req_headers("Atproto-Proxy" = "did:web:api.bsky.chat#bsky_chat")
+  } else if (!is.null(.token$pds)) {
+    method <- sub("^[^/]+/xrpc/", "", name)
+    req <- httr2::request(paste0(.token$pds, "/xrpc/", method))
   } else {
     req <- httr2::request(paste0("https://", name))
   }
@@ -73,8 +85,8 @@ make_request <- function(name, params, req_method = c("GET", "POST"), chat = FAL
   }
   resp <- httr2::req_perform(req)
 
-  if(.return %in% c("", "json")){
-    if(length(resp$body)){
+  if (.return %in% c("", "json")) {
+    if (length(resp$body)) {
       resp <- httr2::resp_body_json(resp)
     } else {
       resp <- list()
@@ -85,38 +97,37 @@ make_request <- function(name, params, req_method = c("GET", "POST"), chat = FAL
 }
 
 
-parse_at_uri <- function(uri){
-
+parse_at_uri <- function(uri) {
   parts <- uri |>
     stringr::str_split("\\/+")
 
   tibble::tibble(
-    protocol   = purrr::map_chr(parts, 1, .default = NA_character_),
-    repo       = purrr::map_chr(parts, 2, .default = NA_character_),
+    protocol = purrr::map_chr(parts, 1, .default = NA_character_),
+    repo = purrr::map_chr(parts, 2, .default = NA_character_),
     collection = purrr::map_chr(parts, 3, .default = NA_character_),
-    rkey       = purrr::map_chr(parts, 4, .default = NA_character_)
+    rkey = purrr::map_chr(parts, 4, .default = NA_character_)
   )
-
 }
 
-parse_http_url <- function(url){
-
-  parts <- purrr::map(url, function(u) try(httr2::url_parse(u), silent = TRUE) |>
-                        purrr::pluck("path") |>
-                        stringr::str_split("(?<=.)\\/"))
+parse_http_url <- function(url) {
+  parts <- purrr::map(url, function(u) {
+    try(httr2::url_parse(u), silent = TRUE) |>
+      purrr::pluck("path") |>
+      stringr::str_split("(?<=.)\\/")
+  })
 
   if (isTRUE(stringr::str_detect(url, "starter-pack"))) {
     out <- tibble::tibble(
-      collection  = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
-      repo       = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
-      rkey       = purrr::map_chr(parts, c(1, 3), .default = NA_character_)
+      collection = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
+      repo = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
+      rkey = purrr::map_chr(parts, c(1, 3), .default = NA_character_)
     )
   } else {
     out <- tibble::tibble(
-      repo_type  = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
-      repo       = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
+      repo_type = purrr::map_chr(parts, c(1, 1), .default = NA_character_),
+      repo = purrr::map_chr(parts, c(1, 2), .default = NA_character_),
       collection = purrr::map_chr(parts, c(1, 3), .default = NA_character_),
-      rkey       = purrr::map_chr(parts, c(1, 4), .default = NA_character_)
+      rkey = purrr::map_chr(parts, c(1, 4), .default = NA_character_)
     )
   }
 
@@ -134,7 +145,7 @@ parse_http_url <- function(url){
 
 #' Resolve the did behind a handle
 #' @noRd
-resolve_handle <- function(.handle, .token = NULL){
+resolve_handle <- function(.handle, .token = NULL) {
   do.call(
     com_atproto_identity_resolve_handle,
     list(handle = .handle, .token = .token)
@@ -156,7 +167,9 @@ get_thread_root <- function(thread) {
     parent <- parent_1_up
     parent_1_up <- purrr::pluck(parent, "parent")
   }
-  if (is.null(parent)) parent <- thread$thread
+  if (is.null(parent)) {
+    parent <- thread$thread
+  }
   return(parent)
 }
 
@@ -166,18 +179,26 @@ get_thread_root <- function(thread) {
 verbosity <- function(verbose) {
   verbose <- verbose %||%
     getOption("ATR_VERBOSE") %||%
-    Sys.getenv("ATR_VERBOSE", unset = TRUE)
+    Sys.getenv("ATR_VERBOSE", unset = TRUE) %||%
+    getOption("ATRRR_VERBOSE") %||%
+    Sys.getenv("ATRRR_VERBOSE", unset = TRUE)
   as.logical(verbose)
 }
 
 
 #' lexicon seems wrong. translated from https://atproto.com/blog/create-post#images-embeds
 #' @noRd
-com_atproto_repo_upload_blob2 <- function(file,
-                                          .token = NULL) {
-  if (identical(file, "")) return()
+com_atproto_repo_upload_blob2 <- function(file, .token = NULL) {
+  if (identical(file, "")) {
+    return()
+  }
   .token <- .token %||% get_token()
-  req <- httr2::request("https://bsky.social/xrpc/com.atproto.repo.uploadBlob") |>
+  req <- httr2::request(
+    paste0(
+      .token$pds %||% "https://bsky.social",
+      "/xrpc/com.atproto.repo.uploadBlob"
+    )
+  ) |>
     httr2::req_auth_bearer_token(token = .token$accessJwt)
 
   if (stringr::str_detect(file, "^http|^www")) {
@@ -185,10 +206,15 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::req_perform()
 
     # fix blob too larger error https://github.com/JBGruber/atrrr/issues/27
-    if (length(res$body) > 976560 & grepl("image", res$headers$`content-type`)) {
+    if (
+      length(res$body) > 976560 & grepl("image", res$headers$`content-type`)
+    ) {
       rlang::check_installed("magick")
       res$body <- magick::image_read(res$body) |>
-        magick::image_write(format = "jpeg", defines = c("jpeg:extent" = "976.56kb"))
+        magick::image_write(
+          format = "jpeg",
+          defines = c("jpeg:extent" = "976.56kb")
+        )
     }
 
     req |>
@@ -198,14 +224,18 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::resp_body_json()
   } else if (file.exists(file)) {
     rlang::check_installed("mime")
-    if (file.info(file)$size > 976560 & grepl("image", mime::guess_type(file))) {
+    if (
+      file.info(file)$size > 976560 & grepl("image", mime::guess_type(file))
+    ) {
       rlang::check_installed("magick")
       cli::cli_alert_info(
         "Image {file} is too large and will be compressed before uploading"
       )
       file <- magick::image_read(file) |>
-        magick::image_write(path = tempfile(fileext = ".jpeg"),
-                            defines = c("jpeg:extent" = "976.56kb"))
+        magick::image_write(
+          path = tempfile(fileext = ".jpeg"),
+          defines = c("jpeg:extent" = "976.56kb")
+        )
     }
     req |>
       httr2::req_headers("Content-Type" = mime::guess_type(file)) |>
@@ -213,9 +243,10 @@ com_atproto_repo_upload_blob2 <- function(file,
       httr2::req_perform() |>
       httr2::resp_body_json()
   } else {
-    cli::cli_abort("image/video file {file} could not be found locally or online.")
+    cli::cli_abort(
+      "image/video file {file} could not be found locally or online."
+    )
   }
-
 }
 
 
@@ -230,12 +261,34 @@ did_lookup <- function(did) {
 }
 
 
+resolve_pds <- function(handle) {
+  did <- httr2::request(
+    "https://bsky.social/xrpc/com.atproto.identity.resolveHandle"
+  ) |>
+    httr2::req_url_query(handle = handle) |>
+    httr2::req_error(body = error_parse) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json() |>
+    purrr::pluck("did")
+
+  doc <- httr2::request(paste0("https://plc.directory/", did)) |>
+    httr2::req_error(body = error_parse) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json(check_type = FALSE)
+
+  services <- doc[["service"]] %||% list()
+  pds <- purrr::keep(services, ~ .x[["type"]] == "AtprotoPersonalDataServer") |>
+    purrr::pluck(1, "serviceEndpoint")
+
+  pds %||% "https://bsky.social"
+}
+
+
 #' matches the behavior of Python's re.find with multi-byte characters
 #' @noRd
 str_locate_all_bytes <- function(string, pattern) {
-
   # calculate byte length of each character
-  character  <-  strsplit(string, split = "")[[1]]
+  character <- strsplit(string, split = "")[[1]]
   byte_len <- tibble::tibble(
     character,
     b_len = purrr::map_int(character, function(str) length(charToRaw(str)))
@@ -261,133 +314,6 @@ str_locate_all_bytes <- function(string, pattern) {
 }
 
 
-fetch_preview <- function(uri) {
-  clean_text <- function(x) {
-    if (is.null(x) || length(x) == 0 || isTRUE(is.na(x))) return("")
-    stringr::str_squish(as.character(x))
-  }
-
-  first_non_empty <- function(...) {
-    vals <- list(...)
-    for (v in vals) {
-      val <- clean_text(v)
-      if (val != "") return(val)
-    }
-    ""
-  }
-
-  is_valid_http_uri <- function(x) {
-    x <- clean_text(x)
-    if (x == "") return(FALSE)
-    parsed <- tryCatch(httr2::url_parse(x), error = function(...) NULL)
-    if (is.null(parsed)) return(FALSE)
-    scheme <- tolower(parsed$scheme %||% "")
-    host <- parsed$hostname %||% ""
-    scheme %in% c("http", "https") && host != ""
-  }
-
-  extract_meta_content <- function(html, attr, key) {
-    pattern_a <- glue::glue(
-      "(?is)<meta[^>]+{attr}=[\"']{key}[\"'][^>]+content=[\"']([^\"']*)[\"'][^>]*>"
-    )
-    pattern_b <- glue::glue(
-      "(?is)<meta[^>]+content=[\"']([^\"']*)[\"'][^>]+{attr}=[\"']{key}[\"'][^>]*>"
-    )
-    first_non_empty(
-      stringr::str_match(html, pattern_a)[, 2],
-      stringr::str_match(html, pattern_b)[, 2]
-    )
-  }
-
-  extract_source_meta <- function(url) {
-    resp <- tryCatch(
-      httr2::request(url) |>
-        httr2::req_timeout(15) |>
-        httr2::req_error(is_error = function(resp) FALSE) |>
-        httr2::req_perform(),
-      error = function(...) NULL
-    )
-    if (is.null(resp) || httr2::resp_status(resp) >= 400L) {
-      return(list(title = "", description = "", image = ""))
-    }
-
-    html <- tryCatch(
-      httr2::resp_body_string(resp),
-      error = function(...) ""
-    )
-    if (clean_text(html) == "") {
-      return(list(title = "", description = "", image = ""))
-    }
-
-    list(
-      title = first_non_empty(
-        extract_meta_content(html, "property", "og:title"),
-        extract_meta_content(html, "name", "twitter:title"),
-        stringr::str_match(html, "(?is)<title[^>]*>(.*?)</title>")[, 2]
-      ),
-      description = first_non_empty(
-        extract_meta_content(html, "property", "og:description"),
-        extract_meta_content(html, "name", "twitter:description"),
-        extract_meta_content(html, "name", "description")
-      ),
-      image = first_non_empty(
-        extract_meta_content(html, "property", "og:image"),
-        extract_meta_content(html, "name", "twitter:image")
-      )
-    )
-  }
-
-  preview <- list()
-  for (attempt in 1:3) {
-    resp <- tryCatch(
-      httr2::request("https://cardyb.bsky.app/v1/extract") |>
-        httr2::req_url_query(url = uri) |>
-        httr2::req_timeout(15) |>
-        httr2::req_error(is_error = function(resp) FALSE) |>
-        httr2::req_perform(),
-      error = function(...) NULL
-    )
-
-    if (!is.null(resp) && httr2::resp_status(resp) < 400L) {
-      preview <- tryCatch(
-        httr2::resp_body_json(resp, check_type = FALSE),
-        error = function(...) list()
-      )
-      break
-    }
-    if (attempt < 3) Sys.sleep(2 ^ (attempt - 1))
-  }
-
-  source_meta <- list(title = "", description = "", image = "")
-  preview_title <- clean_text(preview$title)
-  preview_description <- clean_text(preview$description)
-  if (preview_title == "" || preview_description == "") {
-    source_meta <- extract_source_meta(uri)
-  }
-
-  embed <- list(
-    `$type` = "app.bsky.embed.external",
-    external = list(
-      uri = if (is_valid_http_uri(preview$url)) clean_text(preview$url) else uri,
-      title = first_non_empty(preview_title, source_meta$title),
-      description = first_non_empty(preview_description, source_meta$description)
-    )
-  )
-
-  image_url <- first_non_empty(preview$image, source_meta$image)
-  if (image_url != "") {
-    thumb <- tryCatch(
-      com_atproto_repo_upload_blob2(image_url)$blob,
-      error = function(...) NULL
-    )
-    if (!is.null(thumb)) {
-      embed$external$thumb <- thumb
-    }
-  }
-
-  return(embed)
-}
-
 # extract features, e.g., hashtags, links and mentions from an unparsed post
 extrct_ftrs <- function(post, feature_type) {
   facets <- purrr::pluck(post, "record", "facets")
@@ -404,9 +330,7 @@ from_ggplot <- function(image) {
   if (methods::is(image, "ggplot")) {
     rlang::check_installed("ggplot2")
     tmp <- tempfile(fileext = ".png")
-    ggplot2::ggsave(tmp, image,
-                    width = 7,
-                    height = 7)
+    ggplot2::ggsave(tmp, image, width = 7, height = 7)
     image <- tmp
   }
   return(image)

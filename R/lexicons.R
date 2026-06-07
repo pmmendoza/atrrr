@@ -24,7 +24,9 @@ github_ls <- function(repo, folder, max_depth = 10, verbose = NULL) {
   while (length(paths) > 0 && depth <= max_depth) {
     new_path <- c()
     for (path in paths) {
-      if (verbosity(verbose)) cli::cli_progress_step("Crawl path {sub(repo, '', path, fixed = TRUE)}")
+      if (verbosity(verbose)) {
+        cli::cli_progress_step("Crawl path {sub(repo, '', path, fixed = TRUE)}")
+      }
       rlang::check_installed("jsonlite")
       res <- jsonlite::read_json(path)
       new <- res |>
@@ -40,7 +42,9 @@ github_ls <- function(repo, folder, max_depth = 10, verbose = NULL) {
     paths <- new_path
     depth <- depth + 1
   }
-  if (verbosity(verbose)) cli::cli_progress_done()
+  if (verbosity(verbose)) {
+    cli::cli_progress_done()
+  }
   return(c(files, paths))
 }
 

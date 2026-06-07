@@ -2,6 +2,9 @@
 
 * adds experimental firehose implementation
 * some updates to parsing functions
+* export fetch_preview for more control over link previews
+* allow other PDS (like Eurosky instead of Bluesky)
+* fix issue when posting threads
 
 # atrrr 0.1.1
 

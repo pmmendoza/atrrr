@@ -25,6 +25,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Johannes B. Gruber \email{JohannesB.Gruber@gmail.com} (\href{https://orcid.org/0000-0001-9177-1772}{ORCID})
   \item Benjamin Guinaudeau \email{benjamin.guinaudeau@uni-konstanz.de} (\href{https://orcid.org/0000-0001-7206-6875}{ORCID}) [contributor]
   \item Fabio Votta \email{fabio.votta@gmail.com} (\href{https://orcid.org/0000-0002-3143-5942}{ORCID}) [contributor]
 }

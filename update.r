@@ -1,6 +1,18 @@
 # check without rebuilding vignettes
-devtools::check(build_args = c("--no-manual", "--as-cran", "--no-build-vignettes", "--ignore-vignettes"),
-                args = c("--no-manual", "--as-cran", "--no-build-vignettes", "--ignore-vignettes"))
+devtools::check(
+  build_args = c(
+    "--no-manual",
+    "--as-cran",
+    "--no-build-vignettes",
+    "--ignore-vignettes"
+  ),
+  args = c(
+    "--no-manual",
+    "--as-cran",
+    "--no-build-vignettes",
+    "--ignore-vignettes"
+  )
+)
 
 # re-compute vignettes
 setwd(here::here("vignettes"))
@@ -20,10 +32,9 @@ devtools::submit_cran()
 # once accepted by cran
 #usethis::use_github_release()
 
-use_github_release2 <- function (publish = TRUE) {
+use_github_release2 <- function(publish = TRUE) {
   usethis:::check_is_package("use_github_release()")
-  tr <- usethis:::target_repo(github_get = TRUE, ok_configs = c("ours",
-                                                                "fork"))
+  tr <- usethis:::target_repo(github_get = TRUE, ok_configs = c("ours", "fork"))
   usethis:::check_can_push(tr = tr, "to create a release")
   dat <- usethis:::get_release_data(tr)
   release_name <- glue::glue("{dat$Package} {dat$Version}")
@@ -39,9 +50,14 @@ use_github_release2 <- function (publish = TRUE) {
   news <- usethis:::get_release_news(SHA = dat$SHA, tr = tr, on_cran = on_cran)
   gh <- usethis:::gh_tr(tr)
   usethis:::ui_bullets("Publishing {tag_name} release to GitHub")
-  release <- gh("POST /repos/{owner}/{repo}/releases", name = release_name,
-                tag_name = tag_name, target_commitish = dat$SHA, body = news,
-                draft = !publish)
+  release <- gh(
+    "POST /repos/{owner}/{repo}/releases",
+    name = release_name,
+    tag_name = tag_name,
+    target_commitish = dat$SHA,
+    body = news,
+    draft = !publish
+  )
   usethis:::ui_bullets("Release at {.url {release$html_url}}")
   if (!is.null(dat$file)) {
     usethis:::ui_bullets("Deleting {.path {dat$file}}")
@@ -50,4 +66,3 @@ use_github_release2 <- function (publish = TRUE) {
   invisible()
 }
 use_github_release2()
-
